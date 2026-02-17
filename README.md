@@ -1,16 +1,37 @@
-# React + Vite
+# Tech Stack
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Dette projekt er et moderne frontend-webprojekt bygget med React og Vite.
 
-Currently, two official plugins are available:
+## Frontend
+- **React 19** – anvendes til opbygning af brugergrænsefladen via komponenter  
+- **React Router DOM** – håndterer routing og navigation mellem sider  
+- **Bootstrap 5** – styling og layout  
+- **React-Bootstrap** – React-komponenter baseret på Bootstrap  
+- **Axios** – håndtering af HTTP-requests til backend/API  
+- **jwt-decode** – bruges til at aflæse data fra JWT tokens i forbindelse med autentificering  
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Build og udvikling
+- **Vite** – development server og build tool til React  
+- **ESLint** – linting og kodekvalitet  
+- **@vitejs/plugin-react** – React integration til Vite  
 
-## React Compiler
+Projektet består således af en React-baseret frontend med Bootstrap til UI, Axios til API-kommunikation og Vite som build- og udviklingsværktøj.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+# Kom i gang
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Installation af dependencies
+```bash
+npm install
+```
+## Start dev server:
+```bash
+npm run dev
+```
+## Build til production
+```bash
+npm run build
+```
+Det færdige build genereres i /dist mappen.
+
