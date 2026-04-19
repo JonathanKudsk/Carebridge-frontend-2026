@@ -20,34 +20,11 @@ export function getCurrentUser() {
   }
 }
 
+// Step 1 — credentials only. Never writes to localStorage.
+// Returns { requiresTotpSetup, tempToken } or { requires2FA, tempToken }
 export async function login({ email, password }) {
   const { data } = await api.post("/auth/login", { email, password });
-  console.log("LOGIN RESPONSE", data);
-
-  // Adjust names if needed, but log first:
-  const token = data.token; // if backend sends "token"
-  console.log("ABOUT TO SAVE TOKEN", token);
-
-  try {
-    localStorage.setItem("token", token);
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
-        id: data.id,
-        email: data.email,
-        role: data.role,
-        name: data.name || email.split("@")[0],
-      })
-    );
-    console.log("LOCALSTORAGE AFTER LOGIN", {
-      token: localStorage.getItem("token"),
-      user: localStorage.getItem("user"),
-    });
-  } catch (e) {
-    console.error("FAILED TO WRITE LOCALSTORAGE", e);
-  }
-
-  notifyAuthChanged();
+ 
   return data;
 }
 
