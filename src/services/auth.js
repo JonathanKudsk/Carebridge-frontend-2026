@@ -54,3 +54,11 @@ export function logout() {
   localStorage.removeItem("user");
   notifyAuthChanged();
 }
+
+// Step 2a — first-time setup: fetch QR code URI using the SETUP tempToken
+export async function setupTotp(tempToken) {
+const { data } = await api.get("/auth/2fa/setup", {
+  headers: { Authorization:  `Bearer ${tempToken}` },
+  });
+  return data; // { secret, otpauthUri }
+}
