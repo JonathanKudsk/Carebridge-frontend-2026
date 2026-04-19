@@ -62,3 +62,17 @@ const { data } = await api.get("/auth/2fa/setup", {
   });
   return data; // { secret, otpauthUri }
 }
+
+function storeFullSession(data) {
+  localStorage.setItem("token", data.token);
+  localStorage.setItem(
+    "user",
+    JSON.stringify({
+      id: data.it,
+      email: data.email,
+      role: data.role,
+      name: data.name,
+    })
+  );
+  notifyAuthChanged();
+}
