@@ -76,3 +76,14 @@ function storeFullSession(data) {
   );
   notifyAuthChanged();
 }
+
+// Step 2b — first-time setup: confirm 6-digit code, receive full 14-day JWT
+export async function confirmTotp(tempToken, code){
+  const { data } = await api.post(
+    "auth/2fa/confirm",
+    { code },
+  { headers: { Authorization: `Bearer ${tempToken}` } } 
+);
+storeFullSession(data);
+return data;
+}
