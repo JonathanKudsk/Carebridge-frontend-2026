@@ -210,3 +210,28 @@
   border-bottom: 1px solid #eaeaea;
   padding-bottom: 4px;
 }
+
+/* Simple always-on dark mode */
+html,
+body {
+  background: #000;
+  color: #fff;
+}
+
+a {
+  color: #9cf;
+}
+
+input,
+select,
+textarea,
+button {
+  background: #111;
+  color: #fff;
+  border: 1px solid #666;
+}
+
+option {
+  background: #111;
+  color: #fff;
+}
