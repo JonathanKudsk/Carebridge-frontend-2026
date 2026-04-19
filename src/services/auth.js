@@ -68,7 +68,7 @@ function storeFullSession(data) {
   localStorage.setItem(
     "user",
     JSON.stringify({
-      id: data.it,
+      id: data.id,
       email: data.email,
       role: data.role,
       name: data.name,
@@ -78,9 +78,9 @@ function storeFullSession(data) {
 }
 
 // Step 2b — first-time setup: confirm 6-digit code, receive full 14-day JWT
-export async function confirmTotp(tempToken, code){
+export async function confirmTotp(tempToken, code) {
   const { data } = await api.post(
-    "auth/2fa/confirm",
+    "/auth/2fa/confirm",
     { code },
   { headers: { Authorization: `Bearer ${tempToken}` } } 
 );
