@@ -87,3 +87,14 @@ export async function confirmTotp(tempToken, code){
 storeFullSession(data);
 return data;
 }
+
+// Step 2c — returning user: verify 6-digit code, receive full 14-day JWT
+export async function verifyTotp(tempToken, code) {
+  const { data } = await api.post(
+    "/auth/2fa/verify",
+    { code },
+    { headers: { Authorization: `Bearer ${tempToken}` } }
+  );
+  storeFullSession(data);
+  return data;
+  }
