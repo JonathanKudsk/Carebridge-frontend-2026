@@ -24,7 +24,6 @@ export function getCurrentUser() {
 // Returns { requiresTotpSetup, tempToken } or { requires2FA, tempToken }
 export async function login({ email, password }) {
   const { data } = await api.post("/auth/login", { email, password });
- 
   return data;
 }
 
@@ -57,8 +56,8 @@ export function logout() {
 
 // Step 2a — first-time setup: fetch QR code URI using the SETUP tempToken
 export async function setupTotp(tempToken) {
-const { data } = await api.get("/auth/2fa/setup", {
-  headers: { Authorization:  `Bearer ${tempToken}` },
+  const { data } = await api.get("/auth/2fa/setup", {
+  headers: { Authorization: `Bearer ${tempToken}` },
   });
   return data; // { secret, otpauthUri }
 }
@@ -82,10 +81,10 @@ export async function confirmTotp(tempToken, code) {
   const { data } = await api.post(
     "/auth/2fa/confirm",
     { code },
-  { headers: { Authorization: `Bearer ${tempToken}` } } 
-);
-storeFullSession(data);
-return data;
+    { headers: { Authorization: `Bearer ${tempToken}` } } 
+  );
+  storeFullSession(data);
+  return data;
 }
 
 // Step 2c — returning user: verify 6-digit code, receive full 14-day JWT
@@ -97,4 +96,4 @@ export async function verifyTotp(tempToken, code) {
   );
   storeFullSession(data);
   return data;
-  }
+}
