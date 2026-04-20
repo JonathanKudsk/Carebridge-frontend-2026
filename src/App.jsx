@@ -61,8 +61,7 @@ export default function App() {
   const isAdmin = user?.role === "ADMIN";
   //const isCareworker = user?.role === "CAREWORKER";
   //const isGuardian = user?.role === "GUARDIAN";
-
-
+  
   const [journals, setJournals] = useState([]);
 
   // Listen for login/logout
