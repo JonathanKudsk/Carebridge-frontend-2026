@@ -72,13 +72,13 @@ export async function register({ name, email, password }) {
   return data;
 }
 
-export async function setupTotp(_tempToken) {
+export async function setupTotp() {
   throw new Error("Not implemented yet");
 }
-export async function confirmTotp(_tempToken, _code) {
+export async function confirmTotp() {
   throw new Error("Not implemented yet");
 }
-export async function verifyTotp(_tempToken, _code) {
+export async function verifyTotp() {
   throw new Error("Not implemented yet");
 }
 
