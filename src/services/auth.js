@@ -24,7 +24,35 @@ export function getCurrentUser() {
 // Returns { requiresTotpSetup, tempToken } or { requires2FA, tempToken }
 export async function login({ email, password }) {
   const { data } = await api.post("/auth/login", { email, password });
-  return data;
+//IMPORTANT!! THIS PART NEED TO BE REMOVED WHEN 2fa IMPLEMENTED
+// ITS THE OLD LOGIN FUNCTION AND IS ONLY PLACED HERE TO MAKE THE OLD
+//SYSTEM FUNCTION PROPERLY
+ const token = data.token; // if backend sends "token"
+  console.log("ABOUT TO SAVE TOKEN", token);
+
+ try {
+    localStorage.setItem("token", token);
+    localStorage.setItem(
+      "user",
+      JSON.stringify({
+        id: data.id,
+        email: data.email,
+        role: data.role,
+        name: data.name || email.split("@")[0],
+      })
+    );
+    console.log("LOCALSTORAGE AFTER LOGIN", {
+      token: localStorage.getItem("token"),
+      user: localStorage.getItem("user"),
+    });
+  } catch (e) {
+    console.error("FAILED TO WRITE LOCALSTORAGE", e);
+  }
+
+  notifyAuthChanged();
+
+//THIS IS THE LAST LINE TO REMOVE
+return data;
 }
 
 export async function register({ name, email, password }) {
