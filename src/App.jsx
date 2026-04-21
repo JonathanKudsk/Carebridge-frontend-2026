@@ -16,6 +16,7 @@ import ShowJournalDetails from "./components/Journal/ShowJournalDetails";
 import CreateResidentPage from "./pages/CreateResidentPage";
 import CreateUser from "./pages/(worker)/CreateUser";
 import LinkResidets from "./pages/(worker)/LinkResidents";
+import MessagePage from "./pages/(worker)/MessagePage.jsx";
 
 import {
   getToken,
@@ -58,7 +59,7 @@ export default function App() {
   const navigate = useNavigate();
   const [{ token, user }, setAuth] = useState(readAuth());
   const isAdmin = user?.role === "ADMIN";
-
+  const isCareworker = user?.role === "CAREWORKER";
   const [journals, setJournals] = useState([]);
 
   // Listen for login/logout
@@ -117,6 +118,12 @@ export default function App() {
                     Opret Bruger
                   </Nav.Link>
                 </>
+              )}
+
+              {(isAdmin || isCareworker) && (
+                <Nav.Link as={Link} to="/message-page">
+                  Beskeder
+                </Nav.Link>
               )}
             </Nav>
           )}
@@ -184,6 +191,15 @@ export default function App() {
                   {" "}
                   {/* <-- Tjekker for Admin */}
                   <CreateResidentPage />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/message-page"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN", "CAREWORKER"]}>
+                  <MessagePage />
                 </PrivateRoute>
               }
             />
