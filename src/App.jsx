@@ -16,6 +16,7 @@ import ShowJournalDetails from "./components/Journal/ShowJournalDetails";
 import CreateResidentPage from "./pages/CreateResidentPage";
 import CreateUser from "./pages/(worker)/CreateUser";
 import LinkResidets from "./pages/(worker)/LinkResidents";
+import ShiftCreatePage from "./pages/ShiftCreatePage.jsx";
 
 import {
   getToken,
@@ -58,6 +59,9 @@ export default function App() {
   const navigate = useNavigate();
   const [{ token, user }, setAuth] = useState(readAuth());
   const isAdmin = user?.role === "ADMIN";
+  //const isCareworker = user?.role === "CAREWORKER";
+  //const isGuardian = user?.role === "GUARDIAN";
+
 
   const [journals, setJournals] = useState([]);
 
@@ -205,6 +209,15 @@ export default function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/admin/create-user" element={<CreateUser />} />
             <Route path="/login" element={<Login />} />
+
+            <Route
+              path="/shifts/create"
+              element={
+                <PrivateRoute allowedRoles={["PLANNER"]}>
+                  <ShiftCreatePage />
+                </PrivateRoute>
+              }
+            />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
