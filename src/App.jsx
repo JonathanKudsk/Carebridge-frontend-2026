@@ -23,6 +23,8 @@ import {
   logout,
   onAuthChanged,
 } from "./services/auth";
+import ResidentDetailsPage from "./pages/ResidentDetailsPage.jsx";
+import EditResidentPage from "./pages/EditResidentPage.jsx";
 
 // Helper
 function readAuth() {
@@ -186,6 +188,32 @@ export default function App() {
                   {" "}
                   {/* <-- Tjekker for Admin */}
                   <CreateResidentPage />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/residents/edit/:id"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN"]}>
+                  <EditResidentPage />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/resident-overview"
+              element={
+                <PrivateRoute>
+                  <ResidentOverview />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/residents/:id"
+              element={
+                <PrivateRoute>
+                  <ResidentDetailsPage />
                 </PrivateRoute>
               }
             />
