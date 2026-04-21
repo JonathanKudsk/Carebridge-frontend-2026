@@ -16,6 +16,7 @@ import ShowJournalDetails from "./components/Journal/ShowJournalDetails";
 import CreateResidentPage from "./pages/CreateResidentPage";
 import CreateUser from "./pages/(worker)/CreateUser";
 import LinkResidets from "./pages/(worker)/LinkResidents";
+import MedicationPage from "./pages/MedicationPage.jsx";
 
 import {
   getToken,
@@ -101,6 +102,10 @@ export default function App() {
                 Resident Overview
               </Nav.Link>
 
+              <Nav.Link as={Link} to="/medication">
+                Medication
+              </Nav.Link>
+
               <Nav.Link as={Link} to="/create-journal">
                 Opret Journal Entry
               </Nav.Link>
@@ -176,6 +181,14 @@ export default function App() {
               element={
                 <PrivateRoute>
                   <ResidentOverview />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/medication"
+              element={
+                <PrivateRoute>
+                  <MedicationPage />
                 </PrivateRoute>
               }
             />
