@@ -102,10 +102,6 @@ export default function App() {
                 Resident Overview
               </Nav.Link>
 
-              <Nav.Link as={Link} to="/medication">
-                Medication
-              </Nav.Link>
-
               <Nav.Link as={Link} to="/create-journal">
                 Opret Journal Entry
               </Nav.Link>
@@ -116,6 +112,10 @@ export default function App() {
 
               {isAdmin && (
                 <>
+                  <Nav.Link as={Link} to="/medication">
+                    Medication
+                  </Nav.Link>
+
                   <Nav.Link as={Link} to="/create-resident">
                     Opret Resident
                   </Nav.Link>
@@ -187,7 +187,7 @@ export default function App() {
             <Route
               path="/medication"
               element={
-                <PrivateRoute>
+                <PrivateRoute allowedRoles={["ADMIN"]}>
                   <MedicationPage />
                 </PrivateRoute>
               }
