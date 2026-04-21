@@ -59,7 +59,7 @@ export default function App() {
   const navigate = useNavigate();
   const [{ token, user }, setAuth] = useState(readAuth());
   const isAdmin = user?.role === "ADMIN";
-
+  const isCareworker = user?.role === "CAREWORKER";
   const [journals, setJournals] = useState([]);
 
   // Listen for login/logout
