@@ -24,35 +24,10 @@ export function getCurrentUser() {
 // Returns { requiresTotpSetup, tempToken } or { requires2FA, tempToken }
 export async function login({ email, password }) {
   const { data } = await api.post("/auth/login", { email, password });
-//IMPORTANT!! THIS PART NEED TO BE REMOVED WHEN 2fa IMPLEMENTED
-// ITS THE OLD LOGIN FUNCTION AND IS ONLY PLACED HERE TO MAKE THE OLD
-//SYSTEM FUNCTION PROPERLY
- const token = data.token; // if backend sends "token"
-  console.log("ABOUT TO SAVE TOKEN", token);
-
- try {
-    localStorage.setItem("token", token);
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
-        id: data.id,
-        email: data.email,
-        role: data.role,
-        name: data.name || email.split("@")[0],
-      })
-    );
-    console.log("LOCALSTORAGE AFTER LOGIN", {
-      token: localStorage.getItem("token"),
-      user: localStorage.getItem("user"),
-    });
-  } catch (e) {
-    console.error("FAILED TO WRITE LOCALSTORAGE", e);
+  if (data.token) {
+    storeFullSession(data);
   }
-
-  notifyAuthChanged();
-
-//THIS IS THE LAST LINE TO REMOVE
-return data;
+  return data;
 }
 
 export async function register({ name, email, password }) {
@@ -67,23 +42,13 @@ export async function register({ name, email, password }) {
         email: data.email,
         role: data.role,
         name: data.name || email.split("@")[0],
-      })
+      }),
     );
   } catch (e) {
     console.error("FAILED TO WRITE LOCALSTORAGE (register)", e);
   }
   notifyAuthChanged();
   return data;
-}
-
-export async function setupTotp() {
-  throw new Error("Not implemented yet");
-}
-export async function confirmTotp() {
-  throw new Error("Not implemented yet");
-}
-export async function verifyTotp() {
-  throw new Error("Not implemented yet");
 }
 
 export function logout() {
@@ -95,7 +60,7 @@ export function logout() {
 // Step 2a — first-time setup: fetch QR code URI using the SETUP tempToken
 export async function setupTotp(tempToken) {
   const { data } = await api.get("/auth/2fa/setup", {
-  headers: { Authorization: `Bearer ${tempToken}` },
+    headers: { Authorization: `Bearer ${tempToken}` },
   });
   return data; // { secret, otpauthUri }
 }
@@ -109,7 +74,7 @@ function storeFullSession(data) {
       email: data.email,
       role: data.role,
       name: data.name,
-    })
+    }),
   );
   notifyAuthChanged();
 }
@@ -119,7 +84,7 @@ export async function confirmTotp(tempToken, code) {
   const { data } = await api.post(
     "/auth/2fa/confirm",
     { code },
-    { headers: { Authorization: `Bearer ${tempToken}` } } 
+    { headers: { Authorization: `Bearer ${tempToken}` } },
   );
   storeFullSession(data);
   return data;
@@ -130,7 +95,7 @@ export async function verifyTotp(tempToken, code) {
   const { data } = await api.post(
     "/auth/2fa/verify",
     { code },
-    { headers: { Authorization: `Bearer ${tempToken}` } }
+    { headers: { Authorization: `Bearer ${tempToken}` } },
   );
   storeFullSession(data);
   return data;
