@@ -204,7 +204,7 @@ export default function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/admin/create-user" element={<CreateUser />} />
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={token ? <Navigate to="/" replace /> : <Login />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

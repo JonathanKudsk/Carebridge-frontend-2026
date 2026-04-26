@@ -76,6 +76,16 @@ export async function register({ name, email, password }) {
   return data;
 }
 
+export async function setupTotp() {
+  throw new Error("Not implemented yet");
+}
+export async function confirmTotp() {
+  throw new Error("Not implemented yet");
+}
+export async function verifyTotp() {
+  throw new Error("Not implemented yet");
+}
+
 export function logout() {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
