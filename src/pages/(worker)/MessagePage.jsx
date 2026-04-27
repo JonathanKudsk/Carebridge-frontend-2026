@@ -46,10 +46,13 @@ export default function MessagePage() {
           room.members?.some((m) => m.userId === myIdRef.current)
         );
         setChatRooms(enrichRooms(myRooms, usersRef.current, myIdRef.current));
-      } catch (err) {}
+      } catch (_err) {
+        // polling errors are non-critical
+      }
     }, 5000);
 
     return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function enrichRooms(rooms, allUsers, currentUserId) {

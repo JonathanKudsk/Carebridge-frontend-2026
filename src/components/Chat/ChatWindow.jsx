@@ -21,6 +21,7 @@ export default function ChatWindow({ chatRoom, users = [] }) {
                 if (me?.id) setCurrentUserId(me.id);
             })
             .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
