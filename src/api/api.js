@@ -44,7 +44,7 @@ export async function getAllResidents() {
   return res.data;
 }
 
-export async function getResidentById(id) {
+export async function getResidents(id) {
   const res = await api.get(`/residents/${id}`);
   return res.data;
 }
