@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { Card, Form, ListGroup, Container } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import { getResidents } from "../api/api";
 
 export default function ResidentOverview() {
@@ -9,6 +10,7 @@ export default function ResidentOverview() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortKey, setSortKey] = useState("firstName");
   const [hasJournalOnly, setHasJournalOnly] = useState(false);
+  const navigate = useNavigate();
 
   
   useEffect(() => {
@@ -88,7 +90,13 @@ export default function ResidentOverview() {
           <ListGroup>
             {filteredResidents.length > 0 ? (
               filteredResidents.map((resident) => (
-                <ListGroup.Item key={resident.id}>
+               <ListGroup.Item 
+                  key={resident.id} 
+                  action
+                  onClick={() => navigate(`/residents/${resident.id}`)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  
                   <div className="fw-semibold">
                     {resident.firstName} {resident.lastName}
                   </div>

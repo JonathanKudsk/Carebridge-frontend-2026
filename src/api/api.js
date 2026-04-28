@@ -39,12 +39,12 @@ export async function deleteResident(id) {
   return res.data;
 }
 
-export async function getAllResidents() {
+export async function getResidents() {
   const res = await api.get("/residents");
   return res.data;
 }
 
-export async function getResidents(id) {
+export async function getResidentById(id) {
   const res = await api.get(`/residents/${id}`);
   return res.data;
 }
