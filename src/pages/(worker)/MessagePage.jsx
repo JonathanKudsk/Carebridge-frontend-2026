@@ -46,7 +46,8 @@ export default function MessagePage() {
           room.members?.some((m) => m.userId === myIdRef.current)
         );
         setChatRooms(enrichRooms(myRooms, usersRef.current, myIdRef.current));
-      } catch (_err) {
+      } catch (err) {
+        console.error("Could not load chat rooms", err);
         // polling errors are non-critical
       }
     }, 5000);
