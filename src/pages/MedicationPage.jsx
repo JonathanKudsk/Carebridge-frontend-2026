@@ -4,7 +4,7 @@ import MedicationList from "../components/Medication/MedicationList";
 
 export default function MedicationPage() {
     const [selectedResident, setSelectedResident] = useState(null);
-
+    console.log("SELECTED RESIDENT:", selectedResident);
     return (
         <div>
             <h1 className="h4 mb-3">Medication Page</h1>
@@ -19,7 +19,7 @@ export default function MedicationPage() {
                         {selectedResident.firstName} {selectedResident.lastName}
                     </h3>
 
-                    <MedicationList chartId={selectedResident.chartId} />
+                    <MedicationList chartId={selectedResident.medicationChartId} />
                 </div>
             )}
         </div>

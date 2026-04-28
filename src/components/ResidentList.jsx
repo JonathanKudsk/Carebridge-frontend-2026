@@ -1,7 +1,20 @@
+import { useEffect, useState } from "react";
 import { Table } from "react-bootstrap";
-import { residents } from "../mock/residents";
+import { getResidents } from "../api/residentApi";
 
 export default function ResidentList({ onSelect }) {
+    const [residents, setResidents] = useState([]);
+
+    useEffect(() => {
+        getResidents()
+            .then((data) => {
+                setResidents(data);
+            })
+            .catch((err) => {
+                console.error("Failed to fetch residents", err);
+            });
+    }, []);
+
     return (
         <div>
             <h2>Residents</h2>
