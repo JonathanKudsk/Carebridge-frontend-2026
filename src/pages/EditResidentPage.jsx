@@ -17,17 +17,16 @@ export default function EditResidentPage() {
   const [error, setError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  
   useEffect(() => {
     const fetchResident = async () => {
       try {
         const data = await getResidentById(id);
         setFormData({
-          firstName: data.firstName,
-          lastName: data.lastName,
+          firstName: data.firstName || "",
+          lastName: data.lastName || "",
           cprNr: data.cprNr || ""
         });
-      } catch (err) {
+      } catch {
         setError("Kunne ikke hente beboerens data.");
       } finally {
         setLoading(false);
@@ -36,7 +35,6 @@ export default function EditResidentPage() {
     fetchResident();
   }, [id]);
 
-  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -45,16 +43,13 @@ export default function EditResidentPage() {
     }));
   };
 
-  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSaving(true);
     try {
       await updateResident(id, formData);
-      
-
       navigate(`/residents/${id}`);
-    } catch (err) {
+    } catch {
       setError("Fejl ved opdatering af beboer.");
       setIsSaving(false);
     }
