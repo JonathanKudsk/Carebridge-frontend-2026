@@ -36,7 +36,8 @@ export default function ResidentDetailsPage() {
         await deleteResident(id);
         navigate("/resident-overview"); 
       } catch (err) {
-        alert("Der skete en fejl under sletningen.");
+        console.error(err);
+        setError("Noget gik galt");
       }
     }
   };
