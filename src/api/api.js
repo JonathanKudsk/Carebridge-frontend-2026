@@ -28,3 +28,23 @@ export async function getServerStatus() {
   const res = await api.get("/");
   return res.data;
 }
+
+export async function updateResident(id, residentData) {
+  const res = await api.put(`/residents/${id}`, residentData);
+  return res.data;
+}
+
+export async function deleteResident(id) {
+  const res = await api.delete(`/residents/${id}`);
+  return res.data;
+}
+
+export async function getResidents() {
+  const res = await api.get("/residents");
+  return res.data;
+}
+
+export async function getResidentById(id) {
+  const res = await api.get(`/residents/${id}`);
+  return res.data;
+}
