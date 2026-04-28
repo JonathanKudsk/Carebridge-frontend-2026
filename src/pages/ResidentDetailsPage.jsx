@@ -13,22 +13,21 @@ export default function ResidentDetailsPage() {
   const [showCpr, setShowCpr] = useState(false);
 
   useEffect(() => {
+    async function fetchResident() {
+      try {
+        setLoading(true);
+        const data = await getResidentById(id);
+        setResident(data);
+        setError(null);
+      } catch (err) {
+        setError("Kunne ikke hente beboerdata. Prøv igen senere.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
     fetchResident();
   }, [id]);
-
-  const fetchResident = async () => {
-    try {
-      setLoading(true);
-      const data = await getResidentById(id);
-      setResident(data);
-      setError(null);
-    } catch (err) {
-      setError("Kunne ikke hente beboerdata. Prøv igen senere.");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDelete = async () => {
     if (window.confirm(`Er du sikker på, at du vil slette ${resident.firstName}?`)) {
@@ -58,6 +57,8 @@ export default function ResidentDetailsPage() {
       </Container>
     );
   }
+
+  if (!resident) return null;
 
   return (
     <Container className="mt-4">
