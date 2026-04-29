@@ -12,6 +12,7 @@ export default function ChatWindow({ chatRoom, users = [] }) {
     const currentUser = getCurrentUser();
     const [currentUserId, setCurrentUserId] = useState(currentUser?.id ?? null);
     const bottomRef = useRef(null);
+    const [messageError, setMessageError] = useState("");
 
     useEffect(() => {
         if (currentUserId) return;
@@ -54,9 +55,27 @@ export default function ChatWindow({ chatRoom, users = [] }) {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
+    const validateMessage = (message) => {
+        if (!message || message.trim().length === 0) {
+            return "Beskeden kan ikke være tom.";
+        }
+        if (message.length > 2000) {
+            return "Beskeden kan ikke være længere end 2000 tegn.";
+        }
+        return null;
+    }
+
     async function handleSend(e) {
         e.preventDefault();
-        if (!text.trim() || !currentUserId) return;
+
+        const error = validateMessage(text);
+        if (error) {
+            setMessageError(error);
+            return;
+        }
+
+
+        if (!currentUserId) return;
         setSending(true);
         try {
             await sendMessage({
@@ -65,6 +84,7 @@ export default function ChatWindow({ chatRoom, users = [] }) {
                 message: text.trim(),
             });
             setText("");
+            setMessageError("");
         } catch (err) {
             console.error("Send failed", err);
         } finally {
@@ -114,11 +134,21 @@ export default function ChatWindow({ chatRoom, users = [] }) {
             <Form onSubmit={handleSend} className="p-3 border-top d-flex gap-2">
                 <Form.Control
                     value={text}
-                    onChange={(e) => setText(e.target.value)}
+                    onChange={(e) => {
+                        setText(e.target.value);
+                        setMessageError("");
+                    }}
                     placeholder="Skriv en besked..."
                     disabled={sending}
+                    isInvalid={!!messageError}
                 />
-                <Button type="submit" disabled={sending || !text.trim()}>
+                {messageError && (
+                    <Form.Control.Feedback type="invalid" className="d-block">
+                        {messageError}
+                    </Form.Control.Feedback>
+                )}
+                <Button type="submit" 
+                        disabled={sending || !text.trim() || !!messageError}>
                     {sending ? <Spinner animation="border" size="sm" /> : "Send"}
                 </Button>
             </Form>
