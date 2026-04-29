@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Form, Button, Row, Col, Alert, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { createJournalEntry } from "../../api/api";
+import api from "../../services/api";
 import { validateJournal } from "../../utils/validation";
 
 export default function JournalForm({ initialData, addJournal }) {
@@ -26,44 +27,106 @@ export default function JournalForm({ initialData, addJournal }) {
   );
   const [errors, setErrors] = useState({});
   const [status, setStatus] = useState("idle");
+  const [fieldTypes, setFieldTypes] = useState([]);
+  const [answers, setAnswers] = useState([]);
 
   function handleChange(e) {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setStatus("loading");
+  //Function to get the information about a template from API.
+  function getTemplateInfo(templateId) {
+    api
+      .get("/templates/" + templateId)
+      .then((data) => {
+        setFieldTypes(extractFieldTypes(data.data));
+      })
+      .catch((error) => {
+        console.error("Error fetching template info:", error);
+        setFieldTypes([]);
+      });
+  }
 
-    const validationErrors = validateJournal(formData);
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) {
-      setStatus("error");
+  useEffect(() => {
+    if (!formData.type) {
+      setFieldTypes([]);
       return;
     }
 
-    try {
-      const payload = {
-        title: formData.title,
-        content: formData.content,
-        entryType: formData.type,
-        riskAssessment: formData.riskAssessment,
-        authorUserId: Number(formData.author || storedUser?.id),
-      };
+    getTemplateInfo(formData.type);
+  }, [formData.type]);
 
-      const newEntry = await createJournalEntry(formData.journalId || 1, payload);
 
-      if (addJournal) {
-        addJournal((prev) => [...prev, newEntry]);
+  //Make a list of field types from the database
+  function extractFieldTypes(templateData) {
+    if (!Array.isArray(templateData?.fields)) {
+      return [];
+    }
+
+    return templateData.fields
+      .map((field) => field.fieldType)
+      .filter((fieldType) => typeof fieldType === "string");
+  }
+
+  //Return the correct input field based on the field type
+  function fieldTypeToInputField(fieldType) {
+    if (!Array.isArray(fieldType)) {
+      return null;
+    }
+
+    return fieldType.map((element, index) => {
+      function updateAnswerAtIndex(value) {
+        setAnswers((prev) => {
+          const nextAnswers = [...prev];
+          nextAnswers[index] = value;
+          return nextAnswers;
+        });
       }
 
-      setStatus("success");
-      navigate("/journal-overview");
-    } catch (err) {
-      console.error("Journal oprettelse fejlede:", err.response?.data || err);
-      setStatus("error");
-    }
+      switch (element) {
+        case "TEXTFIELD":
+          return (
+            <Form.Group className="mb-3" key={`text-${index}`}>
+              <Form.Label>Tekstfelt</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Enter text"
+                onChange={(e) => updateAnswerAtIndex(e.target.value)}
+              />
+            </Form.Group>
+          );
+        case "CHECKBOX":
+          return (
+            <Form.Group className="mb-3" key={`checkbox-${index}`}>
+              <Form.Check
+                type="checkbox"
+                label="Check me out"
+                onChange={(e) => updateAnswerAtIndex(e.target.checked)}
+              />
+            </Form.Group>
+          );
+        case "NUMBERFIELD":
+          return (
+            <Form.Group className="mb-3" key={`number-${index}`}>
+              <Form.Label>Talfelt</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Enter number"
+                onChange={(e) => updateAnswerAtIndex(e.target.value)}
+              />
+            </Form.Group>
+          );
+        default:
+          return null;
+      }
+    });
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    console.log("Current answers:", answers);
+    // When we have a api call to save the answers to the database add it in here
   }
 
   return (
@@ -76,82 +139,30 @@ export default function JournalForm({ initialData, addJournal }) {
         {status === "success" && <Alert variant="success">Journal gemt!</Alert>}
         {status === "error" && <Alert variant="danger">Der opstod en fejl.</Alert>}
 
-        <Form onSubmit={handleSubmit}>
-          {/* Titel */}
-          <Form.Group className="mb-3">
-            <Form.Label>Titel</Form.Label>
-            <Form.Control
-              type="text"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-            />
-            {errors.title && (
-              <Form.Text className="text-danger">{errors.title}</Form.Text>
-            )}
-          </Form.Group>
-
-          {/* Forfatter – vist men ikke redigerbar */}
-          <Form.Group className="mb-3">
-            <Form.Label>Forfatter</Form.Label>
-            <Form.Control
-              type="text"
-              value={storedUser?.name || storedUser?.email || "Ukendt bruger"}
-              disabled
-              readOnly
-            />
-          </Form.Group>
-
-          {/* Type */}
-          <Row className="mb-3">
+        <Row className="mb-3">
             <Col>
               <Form.Group>
                 <Form.Label>Type</Form.Label>
                 <Form.Select name="type" value={formData.type} onChange={handleChange}>
                   <option value="">Vælg type</option>
-                  <option value="DAILY">Daily</option>
-                  <option value="NOTE">Note</option>
-                  <option value="MEDICAL">Medical</option>
-                  <option value="INCIDENT">Incident</option>
+                  <option value="1">Template 1</option>
+                  <option value="2">Template 2</option>
+                  <option value="3">Template 3</option>
+                  <option value="4">Template 4</option>
                 </Form.Select>
                 {errors.type && <Form.Text className="text-danger">{errors.type}</Form.Text>}
               </Form.Group>
             </Col>
           </Row>
 
-          {/* Indhold */}
-          <Form.Group className="mb-3">
-            <Form.Label>Indhold</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={4}
-              name="content"
-              value={formData.content}
-              onChange={handleChange}
-            />
-            {errors.content && <Form.Text className="text-danger">{errors.content}</Form.Text>}
-          </Form.Group>
+          <Form onSubmit={handleSubmit}>
+          {fieldTypeToInputField(fieldTypes)}
 
-          {/* Risikoniveau */}
-          <Form.Group className="mb-3">
-            <Form.Label>Risikoniveau</Form.Label>
-            <Form.Select
-              name="riskAssessment"
-              value={formData.riskAssessment}
-              onChange={handleChange}
-            >
-              <option value="">Vælg niveau</option>
-              <option value="LOW">Lav</option>
-              <option value="MEDIUM">Middel</option>
-              <option value="HIGH">Høj</option>
-            </Form.Select>
-            {errors.riskAssessment && <Form.Text className="text-danger">{errors.riskAssessment}</Form.Text>}
-          </Form.Group>
-
-          <Button type="submit" disabled={status === "loading"}>
-            {status === "loading" ? "Gemmer..." : "Gem"}
+          <Button type="submit">
+            Gem
           </Button>
-        </Form>
+          </Form>
+
       </Card.Body>
     </Card>
   );
