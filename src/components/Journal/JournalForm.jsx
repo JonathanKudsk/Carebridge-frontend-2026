@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Form, Button, Row, Col, Alert, Card } from "react-bootstrap";
+import { useCallback, useEffect, useState } from "react";
+import { Form, Button, Row, Col, Card } from "react-bootstrap";
 //import { useNavigate } from "react-router-dom";
 //import { createJournalEntry } from "../../api/api";
 import api from "../../services/api";
@@ -36,7 +36,7 @@ export default function JournalForm({ initialData}) {
   }
 
   //Function to get the information about a template from API.
-  function getTemplateInfo(templateId) {
+  const getTemplateInfo = useCallback((templateId) => {
     api
       .get("/templates/" + templateId)
       .then((data) => {
@@ -46,7 +46,7 @@ export default function JournalForm({ initialData}) {
         console.error("Error fetching template info:", error);
         setFieldTypes([]);
       });
-  }
+  }, []);
 
   useEffect(() => {
     if (!formData.type) {
@@ -55,7 +55,7 @@ export default function JournalForm({ initialData}) {
     }
 
     getTemplateInfo(formData.type);
-  }, [formData.type]);
+  }, [formData.type, getTemplateInfo]);
 
 
   //Make a list of field types from the database
@@ -136,9 +136,6 @@ export default function JournalForm({ initialData}) {
           {initialData ? "Rediger journalindgang" : "Opret journalindgang"}
         </Card.Title>
 
-        {status === "success" && <Alert variant="success">Journal gemt!</Alert>}
-        {status === "error" && <Alert variant="danger">Der opstod en fejl.</Alert>}
-
         <Row className="mb-3">
             <Col>
               <Form.Group>
@@ -150,7 +147,6 @@ export default function JournalForm({ initialData}) {
                   <option value="3">Template 3</option>
                   <option value="4">Template 4</option>
                 </Form.Select>
-                {errors.type && <Form.Text className="text-danger">{errors.type}</Form.Text>}
               </Form.Group>
             </Col>
           </Row>
