@@ -4,7 +4,7 @@ import { getMessages, sendMessage } from "../../services/messages";
 import { getCurrentUser } from "../../services/auth";
 import { getUsers } from "../../api/api";
 
-export default function ChatWindow({ chatRoom, users = [] }) {
+export default function ChatWindow({ chatRoom, users = [], onLastMessage }) {
     const [messages, setMessages] = useState([]);
     const [text, setText] = useState("");
     const [loading, setLoading] = useState(false);
@@ -53,6 +53,9 @@ export default function ChatWindow({ chatRoom, users = [] }) {
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (messages.length > 0) {
+            onLastMessage?.(chatRoom.id, messages[messages.length - 1].message);
+        }
     }, [messages]);
 
     const validateMessage = (message) => {

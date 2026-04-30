@@ -4,6 +4,7 @@ import NewChatModal from "../../components/NewChatModal";
 import ChatRooms from "../../components/Chat/ChatRooms";
 import ChatWindow from "../../components/Chat/ChatWindow";
 import { listChatRooms } from "../../services/chats";
+import { getMessages } from "../../services/messages";
 import { getCurrentUser } from "../../services/auth";
 import { getUsers } from "../../api/api";
 
@@ -31,7 +32,8 @@ export default function MessagePage() {
         const myRooms = rooms.filter((room) =>
           room.members?.some((m) => m.userId === resolvedId)
         );
-        setChatRooms(enrichRooms(myRooms, allUsers, resolvedId));
+        const enriched = enrichRooms(myRooms, allUsers, resolvedId);
+        setChatRooms(await attachLastMessages(enriched));
       } catch (err) {
         console.error("Could not load chat rooms", err);
       }
@@ -45,7 +47,13 @@ export default function MessagePage() {
         const myRooms = rooms.filter((room) =>
           room.members?.some((m) => m.userId === myIdRef.current)
         );
-        setChatRooms(enrichRooms(myRooms, usersRef.current, myIdRef.current));
+        const enriched = enrichRooms(myRooms, usersRef.current, myIdRef.current);
+        setChatRooms((prev) =>
+          enriched.map((room) => {
+            const existing = prev.find((r) => r.id === room.id);
+            return existing?.message ? { ...room, message: existing.message } : room;
+          })
+        );
       } catch (err) {
         console.error("Could not load chat rooms", err);
         // polling errors are non-critical
@@ -56,11 +64,25 @@ export default function MessagePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  async function attachLastMessages(rooms) {
+    return Promise.all(
+      rooms.map(async (room) => {
+        try {
+          const msgs = await getMessages(room.id);
+          const last = msgs[msgs.length - 1];
+          return last ? { ...room, message: last.message } : room;
+        } catch {
+          return room;
+        }
+      })
+    );
+  }
+
   function enrichRooms(rooms, allUsers, currentUserId) {
     return rooms.map((room) => {
-      const other = room.members?.find((m) => m.userId !== currentUserId);
-      const otherUser = allUsers.find((u) => u.id === other?.userId);
-      return { ...room, name: otherUser?.name || "Ukendt" };
+      const others = room.members?.filter((m) => m.userId !== currentUserId) ?? [];
+      const names = others.map((m) => allUsers.find((u) => u.id === m.userId)?.name || "Ukendt");
+      return { ...room, name: names.join(", ") || "Ukendt" };
     });
   }
 
@@ -92,7 +114,15 @@ export default function MessagePage() {
         {activeChatRoom ? (
           <>
             <div className="p-3 border-bottom fw-bold">{activeChatRoom.name}</div>
-            <ChatWindow chatRoom={activeChatRoom} users={users} />
+            <ChatWindow
+            chatRoom={activeChatRoom}
+            users={users}
+            onLastMessage={(roomId, text) =>
+              setChatRooms((prev) =>
+                prev.map((r) => (r.id === roomId ? { ...r, message: text } : r))
+              )
+            }
+          />
           </>
         ) : (
           <div className="d-flex align-items-center justify-content-center h-100 text-muted">
