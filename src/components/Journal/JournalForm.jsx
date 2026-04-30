@@ -1,12 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Form, Button, Row, Col, Card } from "react-bootstrap";
-//import { useNavigate } from "react-router-dom";
-//import { createJournalEntry } from "../../api/api";
 import api from "../../services/api";
-//import { validateJournal } from "../../utils/validation";
 
 export default function JournalForm({ initialData}) {
-  //const navigate = useNavigate();
 
   const storedUser = (() => {
     try {
@@ -25,8 +21,6 @@ export default function JournalForm({ initialData}) {
       riskAssessment: "",
     }
   );
-  //const [errors, setErrors] = useState({});
-  //const [status, setStatus] = useState("idle");
   const [fieldTypes, setFieldTypes] = useState([]);
   const [answers, setAnswers] = useState([]);
 
@@ -126,7 +120,7 @@ export default function JournalForm({ initialData}) {
   function handleSubmit(e) {
     e.preventDefault();
     console.log("Current answers:", answers);
-    // When we have a api call to save the answers to the database add it in here
+    //TODO: When we have a api call to save the answers to the database add it in here
   }
 
   return (
