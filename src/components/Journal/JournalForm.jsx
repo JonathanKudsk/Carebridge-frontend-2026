@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Form, Button, Row, Col, Alert, Card } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
-import { createJournalEntry } from "../../api/api";
+//import { useNavigate } from "react-router-dom";
+//import { createJournalEntry } from "../../api/api";
 import api from "../../services/api";
-import { validateJournal } from "../../utils/validation";
+//import { validateJournal } from "../../utils/validation";
 
-export default function JournalForm({ initialData, addJournal }) {
-  const navigate = useNavigate();
+export default function JournalForm({ initialData}) {
+  //const navigate = useNavigate();
 
   const storedUser = (() => {
     try {
@@ -25,8 +25,8 @@ export default function JournalForm({ initialData, addJournal }) {
       riskAssessment: "",
     }
   );
-  const [errors, setErrors] = useState({});
-  const [status, setStatus] = useState("idle");
+  //const [errors, setErrors] = useState({});
+  //const [status, setStatus] = useState("idle");
   const [fieldTypes, setFieldTypes] = useState([]);
   const [answers, setAnswers] = useState([]);
 
