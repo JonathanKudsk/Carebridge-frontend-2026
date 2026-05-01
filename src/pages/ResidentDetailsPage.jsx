@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Card, Button, Stack, Spinner, Alert } from "react-bootstrap";
-import { getResidentById, deleteResident } from "../api/api.js";
+import { getResidentById, deactivateResident } from "../api/api.js";
 
 export default function ResidentDetailsPage() {
   const { id } = useParams();
@@ -29,10 +29,10 @@ export default function ResidentDetailsPage() {
     fetchResident();
   }, [id]);
 
-  const handleDelete = async () => {
-    if (window.confirm(`Er du sikker på, at du vil slette ${resident.firstName}?`)) {
+  const handleDeactivate = async () => {
+    if (window.confirm(`Er du sikker på, at du vil deaktivere denne Beboer ${resident.firstName}?`)) {
       try {
-        await deleteResident(id);
+        await deactivateResident(id);
         navigate("/resident-overview"); 
       } catch (err) {
         console.error(err);
@@ -105,9 +105,9 @@ export default function ResidentDetailsPage() {
             </Button>
             <Button 
               variant="danger" 
-              onClick={handleDelete}
+              onClick={handleDeactivate}
             >
-              Slet Resident
+              Deaktiver Beboer
             </Button>
           </Stack>
         </Card.Body>
