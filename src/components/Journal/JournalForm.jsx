@@ -155,7 +155,6 @@ export default function JournalForm({ initialData }) {
             <Form.Group className="mb-3" key={`checkbox-${field.id ?? index}`}>
               <Form.Check
                 type="checkbox"
-                //TODO: Find a way to change the label to something dynamic based on the field info
                 label={field.title}
                 onChange={(e) => updateAnswer(e.target.checked)}
               />

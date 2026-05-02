@@ -8,7 +8,7 @@
 >
 > **Scope:** Sprint 1, Spring 2026. Status verified against the code on 2026-04-29.
 
----
+--- 
 
 ## 1. The product in one paragraph
 
