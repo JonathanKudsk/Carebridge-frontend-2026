@@ -43,3 +43,14 @@ export function getAccessLevelOption(accessLevel) {
     ) || ACCESS_LEVEL_OPTIONS[0]
   );
 }
+
+function toNumberOrNull(value) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const numberValue = Number(value);
+
+  return Number.isInteger(numberValue) && numberValue > 0 ? numberValue : null;
+}
+
