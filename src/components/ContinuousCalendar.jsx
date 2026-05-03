@@ -246,6 +246,11 @@ export const ContinuousCalendar = ({
       description: "",
       time: "",
       showOnBoard: true,
+      residentId: "",
+      isPrivate: false,
+      accessLevel: "1",
+      riskLevel: 1,
+      usersWithAccessIds: [],
     }));
   };
 
