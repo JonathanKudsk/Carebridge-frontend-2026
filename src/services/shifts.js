@@ -9,3 +9,13 @@ export async function createShift(payload) {
   const res = await api.post("/shifts/", payload);
   return res.data;
 }
+
+export async function getCareWorkers() {
+  const res = await api.get("/users/careworkers");
+  return res.data;
+}
+
+export async function createShiftAssignment(shiftId, userId) {
+  const res = await api.post("/shift-assignments", { shiftId, userId });
+  return res.data;
+}
