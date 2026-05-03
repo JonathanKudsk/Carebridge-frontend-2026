@@ -6,6 +6,7 @@ import {
   deleteEvent as deleteEventApi,
 } from "../services/events.js";
 import api from "../services/api";
+import { buildCreateEventPayload } from "../utils/eventMappers.js";
 
 const normalizeDate = (raw) => {
   if (!raw && raw !== 0) return null;
@@ -146,6 +147,12 @@ export default function CalendarPage() {
       startAt: dt.toISOString(),
       showOnBoard: !!ui.showOnBoard,
       eventTypeId: resolvedId,
+
+      residentId: ui.residentId,
+      isPrivate: !!ui.isPrivate,
+      accessLevel: ui.accessLevel || "1",
+      riskLevel: ui.riskLevel || 1,
+      usersWithAccessIds: ui.usersWithAccessIds || [],
     };
   };
 
