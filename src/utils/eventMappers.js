@@ -64,3 +64,10 @@ function normalizeIds(ids) {
     .filter((id) => Number.isInteger(id) && id > 0);
 }
 
+function resolveAccessLevel(formState) {
+  if (formState.accessLevel) {
+    return String(formState.accessLevel);
+  }
+
+  return "1";
+}
