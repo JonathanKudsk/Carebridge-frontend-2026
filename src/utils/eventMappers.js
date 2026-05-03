@@ -114,5 +114,13 @@ export function buildCreateEventPayload(formState) {
   };
 }
 
+function buildStartAtFromDateAndTime(event) {
+  if (!event.eventDate) {
+    return null;
+  }
 
+  const time = event.eventTime || "00:00";
+
+  return `${event.eventDate}T${time}`;
+}
 
