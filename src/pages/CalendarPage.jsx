@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { ContinuousCalendar } from "../components/ContinuousCalendar.jsx";
 import {
-  listEvents,
+  fetchCalendarEvents,
   createEvent,
   deleteEvent as deleteEventApi,
 } from "../services/events.js";
@@ -84,7 +84,7 @@ export default function CalendarPage() {
   useEffect(() => {
     (async () => {
       try {
-        const data = await listEvents();
+        const data = await fetchCalendarEvents();
         console.log("Raw backend events:", data);
         setEvents((data || []).map(toUi).filter(Boolean));
       } catch (ex) {
