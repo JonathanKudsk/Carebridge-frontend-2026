@@ -1,10 +1,12 @@
-import { useState } from "react";
-import { Form, Button, Row, Col, Alert, Card } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { Form, Button, Row, Col, Card } from "react-bootstrap";
+import api from "../../services/api";
 import { createJournalEntry } from "../../api/api";
-import { validateJournal } from "../../utils/validation";
+import { useNavigate } from "react-router-dom";
 
-export default function JournalForm({ initialData, addJournal }) {
+export default function JournalForm({ initialData }) {
+  const { journalId: routeJournalId } = useParams();
   const navigate = useNavigate();
 
   const storedUser = (() => {
@@ -17,52 +19,195 @@ export default function JournalForm({ initialData, addJournal }) {
 
   const [formData, setFormData] = useState(
     initialData || {
-      author: storedUser?.id || "",      // <‑‑ author = logged‑in user id
+      author: storedUser?.id || "",
+      journalId: routeJournalId || "",
       title: "",
-      type: "",
-      content: "",
+      templateId: "",
+      entryType: "NOTE",
+      answers: "",
       riskAssessment: "",
     }
   );
-  const [errors, setErrors] = useState({});
-  const [status, setStatus] = useState("idle");
+  const [templateFields, setTemplateFields] = useState([]);
+  const [answers, setAnswers] = useState({});
+  const [availableTemplates, setAvailableTemplates] = useState([]);
+
+  function normalizeTemplateList(payload) {
+    if (Array.isArray(payload)) {
+      return payload;
+    }
+
+    if (Array.isArray(payload?.data)) {
+      return payload.data;
+    }
+
+    if (Array.isArray(payload?.templates)) {
+      return payload.templates;
+    }
+
+    if (Array.isArray(payload?.content)) {
+      return payload.content;
+    }
+
+    return [];
+  }
+
+  function getTemplateValue(template, index) {
+    return template?.id ?? template?.templateId ?? template?.templateID ?? index;
+  }
+
+  function getTemplateLabel(template, index) {
+    return (
+      template?.name ??
+      template?.title ??
+      template?.templateName ??
+      template?.label ??
+      `Template ${index + 1}`
+    );
+  }
 
   function handleChange(e) {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setStatus("loading");
+  const getAllTemplates = useCallback(() => {
+    api
+      .get("/templates")
+      .then((response) => {
+        const templates = normalizeTemplateList(response.data);
+        console.log("Available templates:", templates);
+        setAvailableTemplates(templates);
+      })
+      .catch((error) => {
+        console.error("Error fetching templates:", error);
+        setAvailableTemplates([]);
+      });
+  }, []);
 
-    const validationErrors = validateJournal(formData);
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) {
-      setStatus("error");
+  useEffect(() => {
+    getAllTemplates();
+  }, [getAllTemplates]);
+
+  const getIndividualTemplateInfo = useCallback((templateId) => {
+    api
+      .get("/templates/" + templateId)
+      .then((response) => {
+        setTemplateFields(extractTemplateFields(response.data));
+      })
+      .catch((error) => {
+        console.error("Error fetching template info:", error);
+        setTemplateFields([]);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!formData.templateId) {
+      setTemplateFields([]);
       return;
     }
 
-    try {
-      const payload = {
-        title: formData.title,
-        content: formData.content,
-        entryType: formData.type,
-        riskAssessment: formData.riskAssessment,
-        authorUserId: Number(formData.author || storedUser?.id),
-      };
+    getIndividualTemplateInfo(formData.templateId);
+  }, [formData.templateId, getIndividualTemplateInfo]);
 
-      const newEntry = await createJournalEntry(formData.journalId || 1, payload);
+  function extractTemplateFields(templateData) {
+    if (!Array.isArray(templateData?.fields)) {
+      return [];
+    }
 
-      if (addJournal) {
-        addJournal((prev) => [...prev, newEntry]);
+    return templateData.fields
+      .map((field, index) => ({
+        id: field.id ?? field.fieldId ?? field.fieldID ?? index,
+        title: field.title,
+        fieldType: field.fieldType,
+      }))
+      .filter((field) => typeof field.fieldType === "string");
+  }
+
+  function fieldTypeToInputField(fields) {
+    if (!Array.isArray(fields)) {
+      return null;
+    }
+
+    return fields.map((field, index) => {
+      function updateAnswer(value) {
+        setAnswers((prev) => ({
+          ...prev,
+          [field.id]: value,
+        }));
       }
 
-      setStatus("success");
+      switch (field.fieldType) {
+        case "TEXTFIELD":
+          return (
+            <Form.Group className="mb-3" key={`text-${field.id ?? index}`}>
+              <Form.Label>Tekstfelt</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Enter text"
+                required
+                onChange={(e) => updateAnswer(e.target.value)}
+              />
+            </Form.Group>
+          );
+        case "CHECKBOX":
+          return (
+            <Form.Group className="mb-3" key={`checkbox-${field.id ?? index}`}>
+              <Form.Check
+                type="checkbox"
+                label={field.title}
+                onChange={(e) => updateAnswer(e.target.checked)}
+              />
+            </Form.Group>
+          );
+        case "NUMBERFIELD":
+          return (
+            <Form.Group className="mb-3" key={`number-${field.id ?? index}`}>
+              <Form.Label>Talfelt</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Enter number"
+                required
+                onChange={(e) => updateAnswer(e.target.value)}
+              />
+            </Form.Group>
+          );
+        default:
+          return null;
+      }
+    });
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    const journalId = Number(
+      formData.journalId || routeJournalId || initialData?.journalId
+    );
+    if (!Number.isInteger(journalId) || journalId <= 0) {
+      console.error("Missing journalId for journal entry submit");
+      return;
+    }
+
+    const payload = {
+      title: formData.title?.trim() || "",
+      entryType: formData.entryType || "NOTE",
+      riskAssessment: formData.riskAssessment || "",
+      templateId: Number(formData.templateId),
+      answers: templateFields.map((field) => ({
+        fieldId: field.id,
+        answer: answers[field.id] ?? "",
+      })),
+    };
+
+    try {
+      const data = await createJournalEntry(journalId, payload);
+      console.log("Journal entry created:", data);
+      alert("Journal entry created successfully!");
       navigate("/journal-overview");
-    } catch (err) {
-      console.error("Journal oprettelse fejlede:", err.response?.data || err);
-      setStatus("error");
+    } catch (error) {
+      console.error("Error creating journal entry:", error);
+      alert("Failed to create journal entry. Please try again.");
     }
   }
 
@@ -72,85 +217,100 @@ export default function JournalForm({ initialData, addJournal }) {
         <Card.Title>
           {initialData ? "Rediger journalindgang" : "Opret journalindgang"}
         </Card.Title>
-
-        {status === "success" && <Alert variant="success">Journal gemt!</Alert>}
-        {status === "error" && <Alert variant="danger">Der opstod en fejl.</Alert>}
-
+        
         <Form onSubmit={handleSubmit}>
-          {/* Titel */}
+        <Row className="mb-3">
+          <Col>
+            <Form.Group>
+              <Form.Label>Journal ID</Form.Label>
+              <Form.Control
+                type="number"
+                name="journalId"
+                value={formData.journalId}
+                onChange={handleChange}
+                placeholder="Indtast journalens ID"
+                min="1"
+                required
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+
+        <Row className="mb-3">
+          <Col>
+            <Form.Group>
+              <Form.Label>Titel</Form.Label>
+              <Form.Control
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                placeholder="Skriv en titel"
+                required
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+
+        <Row className="mb-3">
+          <Col>
+            <Form.Group>
+              <Form.Label>Type</Form.Label>
+              <Form.Select
+                name="type"
+                value={formData.type}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Vælg Type</option>
+                {availableTemplates.map((template, index) => {
+                  const templateValue = getTemplateValue(template, index);
+
+                  return (
+                    <option key={templateValue} value={templateValue}>
+                      {getTemplateLabel(template, index)}
+                    </option>
+                  );
+                })}
+              </Form.Select>
+            </Form.Group>
+          </Col>
+        </Row>
+
+        
           <Form.Group className="mb-3">
-            <Form.Label>Titel</Form.Label>
-            <Form.Control
-              type="text"
-              name="title"
-              value={formData.title}
+            <Form.Label>Entry Type</Form.Label>
+            <Form.Select
+              name="entryType"
+              value={formData.entryType}
               onChange={handleChange}
-            />
-            {errors.title && (
-              <Form.Text className="text-danger">{errors.title}</Form.Text>
-            )}
+              required
+            >
+              <option value="DAILY">DAILY</option>
+              <option value="NOTE">NOTE</option>
+              <option value="MEDICAL">MEDICAL</option>
+              <option value="INCIDENT">INCIDENT</option>
+            </Form.Select>
           </Form.Group>
 
-          {/* Forfatter – vist men ikke redigerbar */}
-          <Form.Group className="mb-3">
-            <Form.Label>Forfatter</Form.Label>
-            <Form.Control
-              type="text"
-              value={storedUser?.name || storedUser?.email || "Ukendt bruger"}
-              disabled
-              readOnly
-            />
-          </Form.Group>
-
-          {/* Type */}
-          <Row className="mb-3">
-            <Col>
-              <Form.Group>
-                <Form.Label>Type</Form.Label>
-                <Form.Select name="type" value={formData.type} onChange={handleChange}>
-                  <option value="">Vælg type</option>
-                  <option value="DAILY">Daily</option>
-                  <option value="NOTE">Note</option>
-                  <option value="MEDICAL">Medical</option>
-                  <option value="INCIDENT">Incident</option>
-                </Form.Select>
-                {errors.type && <Form.Text className="text-danger">{errors.type}</Form.Text>}
-              </Form.Group>
-            </Col>
-          </Row>
-
-          {/* Indhold */}
-          <Form.Group className="mb-3">
-            <Form.Label>Indhold</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={4}
-              name="content"
-              value={formData.content}
-              onChange={handleChange}
-            />
-            {errors.content && <Form.Text className="text-danger">{errors.content}</Form.Text>}
-          </Form.Group>
-
-          {/* Risikoniveau */}
           <Form.Group className="mb-3">
             <Form.Label>Risikoniveau</Form.Label>
             <Form.Select
               name="riskAssessment"
               value={formData.riskAssessment}
               onChange={handleChange}
+              required
             >
-              <option value="">Vælg niveau</option>
-              <option value="LOW">Lav</option>
-              <option value="MEDIUM">Middel</option>
-              <option value="HIGH">Høj</option>
+              <option value="">Vælg risikoeniveau</option>
+              <option value="LOW">LOW</option>
+              <option value="MEDIUM">MEDIUM</option>
+              <option value="HIGH">HIGH</option>
             </Form.Select>
-            {errors.riskAssessment && <Form.Text className="text-danger">{errors.riskAssessment}</Form.Text>}
           </Form.Group>
 
-          <Button type="submit" disabled={status === "loading"}>
-            {status === "loading" ? "Gemmer..." : "Gem"}
-          </Button>
+          {fieldTypeToInputField(templateFields)}
+
+          <Button type="submit">Gem</Button>
         </Form>
       </Card.Body>
     </Card>
