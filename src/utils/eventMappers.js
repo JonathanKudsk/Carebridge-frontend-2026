@@ -135,7 +135,7 @@ export function mapEventForCalendar(event, currentUser = null) {
     id: event.id,
     title: event.title,
     description: event.description || "",
-    startAt: event.startAt,
+    startAt: event.startAt || buildStartAtFromDateAndTime(event),
     showOnBoard:
       event.showOnBoard === true ||
       event.showOnBoard === 1 ||
