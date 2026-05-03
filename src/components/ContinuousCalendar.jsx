@@ -778,7 +778,28 @@ export const ContinuousCalendar = ({
                     </div>
                   )}
                 </div>
-
+                <div className="mb-3">
+                  <label className="form-label">Users with access</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={(formData.usersWithAccessIds || []).join(",")}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        usersWithAccessIds: e.target.value
+                          .split(",")
+                          .map((id) => id.trim())
+                          .filter((id) => id.length > 0),
+                      })
+                    }
+                    placeholder="User IDs separated by comma, e.g. 1,2,3"
+                  />
+                  <div className="form-text">
+                    Enter user IDs separated by comma. Backend validates the
+                    final access list.
+                  </div>
+                </div>
                 <div className="form-check mb-3">
                   <input
                     className="form-check-input"
