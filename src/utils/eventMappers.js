@@ -129,35 +129,29 @@ export function mapEventForCalendar(event, currentUser = null) {
     return null;
   }
 
-  const startAt = event.startAt || buildStartAtFromDateAndTime(event);
   const accessLevelOption = getAccessLevelOption(event.accessLevel);
 
   return {
     id: event.id,
     title: event.title,
     description: event.description || "",
-    startAt,
-    date: event.eventDate || "",
-    time: event.eventTime || "",
+    startAt: event.startAt,
     showOnBoard:
       event.showOnBoard === true ||
       event.showOnBoard === 1 ||
       event.showOnBoard === "true",
 
-    eventTypeId: event.eventTypeId,
     createdById: event.createdById,
-    seenByCurrentUser: !!event.seenByCurrentUser,
-    seenByUserIds: event.seenByUserIds || [],
-
+    eventTypeId: event.eventTypeId,
     residentId: event.residentId,
-    isPrivate: !!event.isPrivate,
-    accessLevel: event.accessLevel || accessLevelOption.value,
     riskLevel: event.riskLevel || accessLevelOption.level,
     riskColor: event.riskColor || accessLevelOption.riskColor,
     riskDescription: event.riskDescription || accessLevelOption.riskDescription,
+    isPrivate: !!event.isPrivate,
+    accessLevel: event.accessLevel || accessLevelOption.value,
     usersWithAccessIds: event.usersWithAccessIds || [],
-
-    currentUserId: currentUser?.id,
+    eventDate: event.eventDate,
+    eventTime: event.eventTime,
   };
 }
 
