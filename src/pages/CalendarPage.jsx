@@ -159,7 +159,8 @@ export default function CalendarPage() {
           return;
         }
 
-        const created = await createEvent(toApi(payloadFromCalendar));
+        const createEventPayload = buildCreateEventPayload(toApi(payloadFromCalendar));
+        const created = await createEvent(createEventPayload);
         const mapped = toUi(created);
         if (mapped) {
           setEvents((prev) => [...prev, mapped]);
