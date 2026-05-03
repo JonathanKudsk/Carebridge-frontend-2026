@@ -97,14 +97,20 @@ export default function ResidentDetailsPage() {
           <hr />
 
           <Stack direction="horizontal" gap={3} className="justify-content-end">
-            <Button 
-              variant="outline-secondary" 
+            <Button
+              variant="primary"
+              onClick={() => navigate(`/residents/${id}/create-journal`)}
+            >
+              Opret Journal Entry
+            </Button>
+            <Button
+              variant="outline-secondary"
               onClick={() => navigate(`/residents/edit/${id}`)}
             >
               Rediger Information
             </Button>
-            <Button 
-              variant="danger" 
+            <Button
+              variant="danger"
               onClick={handleDeactivate}
             >
               Deaktiver Beboer

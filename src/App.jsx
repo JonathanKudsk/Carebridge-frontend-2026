@@ -101,10 +101,6 @@ export default function App() {
                 Resident Overview
               </Nav.Link>
 
-              <Nav.Link as={Link} to="/create-journal">
-                Opret Journal Entry
-              </Nav.Link>
-
               <Nav.Link as={Link} to="/journal-overview">
                 Journal Oversigt
               </Nav.Link>
@@ -218,8 +214,12 @@ export default function App() {
 
             {/* Journal Pages */}
             <Route
-              path="/create-journal"
-              element={<CreateJournalPage addJournal={setJournals} />}
+              path="/residents/:id/create-journal"
+              element={
+                <PrivateRoute>
+                  <CreateJournalPage addJournal={setJournals} />
+                </PrivateRoute>
+              }
             />
             <Route
               path="/journal-overview"

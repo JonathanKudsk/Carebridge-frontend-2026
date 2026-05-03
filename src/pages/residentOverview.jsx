@@ -11,7 +11,12 @@ export default function ResidentOverview() {
   const [sortKey, setSortKey] = useState("firstName");
   const [hasJournalOnly, setHasJournalOnly] = useState(false);
   const navigate = useNavigate();
-  const [showInactive, setShowInactive] = useState(false);
+  // TODO: Sat til true som workaround — backend sender ikke `isactive`-feltet med
+  // ud i /residents-responsen, så filteret `resident.active === true` (linje ~38)
+  // filtrerer ALLE beboere væk når default er false.
+  // Fix bør laves af TEAM-4 (commit 0097142) eller backend: enten skal feltet
+  // serialiseres med i ResidentDTO, eller filteret skal fjernes/justeres.
+  const [showInactive, setShowInactive] = useState(true);
 
   
   useEffect(() => {
