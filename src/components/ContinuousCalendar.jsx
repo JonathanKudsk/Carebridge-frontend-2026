@@ -751,6 +751,33 @@ export const ContinuousCalendar = ({
 
               <div className="border-top mt-4 pt-3">
                 <h3 className="h6 mb-3">Access settings</h3>
+                <div className="mb-3">
+                  <label className="form-label">
+                    Resident <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    className={
+                      "form-control " +
+                      (formErrors.residentId ? "is-invalid" : "")
+                    }
+                    value={formData.residentId}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        residentId: e.target.value,
+                      })
+                    }
+                    placeholder="Resident ID"
+                    required
+                  />
+                  {formErrors.residentId && (
+                    <div className="invalid-feedback">
+                      {formErrors.residentId}
+                    </div>
+                  )}
+                </div>
 
                 <div className="form-check mb-3">
                   <input
