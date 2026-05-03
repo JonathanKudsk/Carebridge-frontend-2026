@@ -50,13 +50,19 @@ export const ContinuousCalendar = ({
   const [showForm, setShowForm] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [formData, setFormData] = useState(() => ({
-    title: "",
-    description: "",
-    date: toLocalYMD(new Date()),
-    time: "",
-    type: "Meeting",
-    showOnBoard: true,
-  }));
+  title: "",
+  description: "",
+  date: toLocalYMD(new Date()),
+  time: "",
+  type: "Meeting",
+  showOnBoard: true,
+
+  residentId: "",
+  isPrivate: false,
+  accessLevel: "1",
+  riskLevel: 1,
+  usersWithAccessIds: [],
+}));
 
   const eventTypes = [
     "Meeting",
