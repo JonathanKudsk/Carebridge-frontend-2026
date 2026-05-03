@@ -54,3 +54,13 @@ function toNumberOrNull(value) {
   return Number.isInteger(numberValue) && numberValue > 0 ? numberValue : null;
 }
 
+function normalizeIds(ids) {
+  if (!Array.isArray(ids)) {
+    return [];
+  }
+
+  return ids
+    .map((id) => Number(id))
+    .filter((id) => Number.isInteger(id) && id > 0);
+}
+
