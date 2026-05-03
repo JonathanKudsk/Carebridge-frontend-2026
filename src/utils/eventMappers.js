@@ -92,3 +92,27 @@ function resolveStartAt(formState) {
 
   return new Date(year, month - 1, day, hour, minute, 0).toISOString();
 }
+
+export function buildCreateEventPayload(formState) {
+  const accessLevel = resolveAccessLevel(formState);
+  const accessLevelOption = getAccessLevelOption(accessLevel);
+
+  return {
+    title: formState.title?.trim() || "",
+    description: formState.description?.trim() || "",
+    startAt: resolveStartAt(formState),
+    showOnBoard: !!formState.showOnBoard,
+    eventTypeId: toNumberOrNull(formState.eventTypeId),
+
+    residentId: toNumberOrNull(formState.residentId),
+    isPrivate: !!formState.isPrivate,
+    accessLevel,
+    riskLevel: Number(formState.riskLevel || accessLevelOption.level),
+    riskColor: accessLevelOption.riskColor,
+    riskDescription: accessLevelOption.riskDescription,
+    usersWithAccessIds: normalizeIds(formState.usersWithAccessIds),
+  };
+}
+
+
+
