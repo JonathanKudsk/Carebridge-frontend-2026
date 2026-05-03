@@ -48,3 +48,8 @@ export async function getResidentById(id) {
   const res = await api.get(`/residents/${id}`);
   return res.data;
 }
+
+export async function deactivateResident(id) {
+  const res = await api.put(`/residents/deactivate/${id}`);
+  return res.data;
+}

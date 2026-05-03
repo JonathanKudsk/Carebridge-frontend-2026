@@ -11,6 +11,7 @@ export default function ResidentOverview() {
   const [sortKey, setSortKey] = useState("firstName");
   const [hasJournalOnly, setHasJournalOnly] = useState(false);
   const navigate = useNavigate();
+  const [showInactive, setShowInactive] = useState(false);
 
   
   useEffect(() => {
@@ -34,14 +35,15 @@ export default function ResidentOverview() {
         const fullName = `${resident.firstName} ${resident.lastName}`.toLowerCase();
         const matchesSearch = fullName.includes(searchTerm.toLowerCase());
         const matchesJournalFilter = hasJournalOnly ? Boolean(resident.journalId) : true;
-        return matchesSearch && matchesJournalFilter;
+        const matchesStatus = showInactive ? true : resident.active === true;
+        return matchesSearch && matchesJournalFilter && matchesStatus;
       })
       .sort((a, b) =>
         (a[sortKey] || "").localeCompare(b[sortKey] || "", undefined, {
           sensitivity: "base",
         })
       );
-  }, [residents, searchTerm, sortKey, hasJournalOnly]);
+  }, [residents, searchTerm, sortKey, hasJournalOnly, showInactive]);
 
   if (loading) return <Container className="mt-4"><p>Indlæser beboere...</p></Container>;
   if (error) return <Container className="mt-4"><p className="text-danger">{error}</p></Container>;
@@ -82,6 +84,14 @@ export default function ResidentOverview() {
                   label="Vis kun beboere med journal"
                   checked={hasJournalOnly}
                   onChange={(e) => setHasJournalOnly(e.target.checked)}
+                />
+                <Form.Check
+                  id="showInactiveFilter"
+                  type="checkbox"
+                  label="Vis deaktiverede beboere"
+                  checked={showInactive}
+                  onChange={(e) => setShowInactive(e.target.checked)}
+                  className="mt-2"
                 />
               </Form>
             </Card.Body>
