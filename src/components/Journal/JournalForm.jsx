@@ -22,9 +22,9 @@ export default function JournalForm({ initialData }) {
       author: storedUser?.id || "",
       journalId: routeJournalId || "",
       title: "",
-      type: "",
+      templateId: "",
       entryType: "NOTE",
-      content: "",
+      answers: "",
       riskAssessment: "",
     }
   );
@@ -102,13 +102,13 @@ export default function JournalForm({ initialData }) {
   }, []);
 
   useEffect(() => {
-    if (!formData.type) {
+    if (!formData.templateId) {
       setTemplateFields([]);
       return;
     }
 
-    getIndividualTemplateInfo(formData.type);
-  }, [formData.type, getIndividualTemplateInfo]);
+    getIndividualTemplateInfo(formData.templateId);
+  }, [formData.templateId, getIndividualTemplateInfo]);
 
   function extractTemplateFields(templateData) {
     if (!Array.isArray(templateData?.fields)) {
@@ -193,7 +193,7 @@ export default function JournalForm({ initialData }) {
       title: formData.title?.trim() || "",
       entryType: formData.entryType || "NOTE",
       riskAssessment: formData.riskAssessment || "",
-      templateId: Number(formData.type),
+      templateId: Number(formData.templateId),
       answers: templateFields.map((field) => ({
         fieldId: field.id,
         answer: answers[field.id] ?? "",
