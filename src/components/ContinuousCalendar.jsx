@@ -142,41 +142,52 @@ export const ContinuousCalendar = ({
     return map;
   }, [events]);
 
-  const openForm = useCallback((eventToEdit = null, dateObj = null) => {
-    setFormErrors({});
-    setEditingEvent(eventToEdit || null);
+ const openForm = useCallback((eventToEdit = null, dateObj = null) => {
+  setFormErrors({});
+  setEditingEvent(eventToEdit || null);
 
-    if (eventToEdit) {
-      setFormData({
-        id: eventToEdit.id,
-        title: eventToEdit.title || "",
-        description: eventToEdit.description || "",
-        date:
-          (eventToEdit.date || "").slice(0, 10) ||
-          (eventToEdit.startAt
-            ? toLocalYMD(new Date(eventToEdit.startAt))
-            : toLocalYMD(new Date())),
-        time: eventToEdit.time || "",
-        type: eventToEdit.type || "Meeting",
-        showOnBoard: !!eventToEdit.showOnBoard,
-      });
-    } else {
-      const initialDate = dateObj
-        ? toLocalYMD(dateObj)
-        : toLocalYMD(new Date());
-      setFormData({
-        id: null,
-        title: "",
-        description: "",
-        date: initialDate,
-        time: "",
-        type: "Meeting",
-        showOnBoard: true,
-      });
-    }
+  if (eventToEdit) {
+    setFormData({
+      id: eventToEdit.id,
+      title: eventToEdit.title || "",
+      description: eventToEdit.description || "",
+      date:
+        (eventToEdit.date || "").slice(0, 10) ||
+        (eventToEdit.startAt
+          ? toLocalYMD(new Date(eventToEdit.startAt))
+          : toLocalYMD(new Date())),
+      time: eventToEdit.time || "",
+      type: eventToEdit.type || "Meeting",
+      showOnBoard: !!eventToEdit.showOnBoard,
+      residentId: eventToEdit.residentId || "",
+      isPrivate: !!eventToEdit.isPrivate,
+      accessLevel: eventToEdit.accessLevel || "1",
+      riskLevel: eventToEdit.riskLevel || 1,
+      usersWithAccessIds: eventToEdit.usersWithAccessIds || [],
+    });
+  } else {
+    const initialDate = dateObj
+      ? toLocalYMD(dateObj)
+      : toLocalYMD(new Date());
 
-    setShowForm(true);
-  }, []);
+    setFormData({
+      id: null,
+      title: "",
+      description: "",
+      date: initialDate,
+      time: "",
+      type: "Meeting",
+      showOnBoard: true,
+      residentId: "",
+      isPrivate: false,
+      accessLevel: "1",
+      riskLevel: 1,
+      usersWithAccessIds: [],
+    });
+  }
+
+  setShowForm(true);
+}, []);
 
   const validate = () => {
     const e = {};
