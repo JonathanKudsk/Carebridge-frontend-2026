@@ -226,7 +226,7 @@ export default function CalendarPage() {
       {!loading && (
         <ContinuousCalendar
           events={events}
-          onCreate={handleCreate}
+          onCreate={}
           onEventClick={(e) => console.log("clicked event", e)}
           onDelete={handleDelete}
         />
