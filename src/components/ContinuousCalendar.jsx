@@ -219,15 +219,21 @@ export const ContinuousCalendar = ({
     const eventId = editingEvent ? editingEvent.id : `${Date.now()}`;
 
     const payload = {
-      id: eventId,
-      title: formData.title.trim(),
-      description: formData.description?.trim() || "",
-      date: formData.date,
-      time: formData.time || "",
-      datetime: out.toISOString(),
-      type: formData.type,
-      showOnBoard: !!formData.showOnBoard,
-    };
+  id: eventId,
+  title: formData.title.trim(),
+  description: formData.description?.trim() || "",
+  date: formData.date,
+  time: formData.time || "",
+  datetime: out.toISOString(),
+  type: formData.type,
+  showOnBoard: !!formData.showOnBoard,
+
+  residentId: formData.residentId,
+  isPrivate: !!formData.isPrivate,
+  accessLevel: formData.accessLevel || "1",
+  riskLevel: formData.riskLevel || 1,
+  usersWithAccessIds: formData.usersWithAccessIds || [],
+};
 
     if (onCreate) onCreate(payload);
 
