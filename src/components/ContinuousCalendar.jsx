@@ -190,12 +190,13 @@ export const ContinuousCalendar = ({
 }, []);
 
   const validate = () => {
-    const e = {};
-    if (!formData.title?.trim()) e.title = "Title is required";
-    if (!formData.date) e.date = "Date is required";
-    setFormErrors(e);
-    return Object.keys(e).length === 0;
-  };
+  const e = {};
+  if (!formData.title?.trim()) e.title = "Title is required";
+  if (!formData.date) e.date = "Date is required";
+  if (!formData.residentId) e.residentId = "Resident is required";
+  setFormErrors(e);
+  return Object.keys(e).length === 0;
+};
 
   const handleSubmit = (ev) => {
     ev.preventDefault();
