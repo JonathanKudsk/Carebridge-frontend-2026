@@ -90,4 +90,5 @@ function resolveStartAt(formState) {
     .split(":")
     .map(Number);
 
-  return new Date(year, month - 1, day, hour, minute, 0).toISOStri
+  return new Date(year, month - 1, day, hour, minute, 0).toISOString();
+}
