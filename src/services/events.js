@@ -52,3 +52,9 @@ export async function unmarkEventSeen(id) {
   return api.delete(`/events/${id}/mark-seen`);
 }
 
+export async function fetchCalendarEvents(filters = {}) {
+  const { data } = await api.get("/events/", {
+    params: filters,
+  });
+  return data;
+}
