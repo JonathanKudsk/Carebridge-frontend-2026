@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Container, Card, Button, Stack, Spinner, Alert } from "react-bootstrap";
-import { getResidentById, deactivateResident } from "../api/api.js";
+import { Container, Card, Button, Stack, Spinner, Alert, Accordion } from "react-bootstrap";
+import { getResidentById, deactivateResident, getJournalEntries } from "../api/api.js";
+
+const formatDateTime = (arr) => {
+  if (!arr) return "";
+  const [y, mo, d, h, mi, s] = arr;
+  return new Date(y, mo - 1, d, h, mi, s).toLocaleString("da-DK");
+};
 
 export default function ResidentDetailsPage() {
   const { id } = useParams();
@@ -11,6 +17,10 @@ export default function ResidentDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showCpr, setShowCpr] = useState(false);
+
+  const [entries, setEntries] = useState([]);
+  const [entriesLoading, setEntriesLoading] = useState(false);
+  const [entriesError, setEntriesError] = useState(null);
 
   useEffect(() => {
     async function fetchResident() {
@@ -28,6 +38,24 @@ export default function ResidentDetailsPage() {
     }
     fetchResident();
   }, [id]);
+
+  useEffect(() => {
+    if (!resident?.journalId) return;
+    async function fetchEntries() {
+      try {
+        setEntriesLoading(true);
+        const data = await getJournalEntries(resident.journalId);
+        setEntries(data || []);
+        setEntriesError(null);
+      } catch (err) {
+        console.error(err);
+        setEntriesError("Kunne ikke hente journal entries.");
+      } finally {
+        setEntriesLoading(false);
+      }
+    }
+    fetchEntries();
+  }, [resident?.journalId]);
 
   const handleDeactivate = async () => {
     if (window.confirm(`Er du sikker på, at du vil deaktivere denne Beboer ${resident.firstName}?`)) {
@@ -118,6 +146,49 @@ export default function ResidentDetailsPage() {
           </Stack>
         </Card.Body>
       </Card>
+
+      {resident.journalId && (
+        <Card className="shadow-sm mt-4">
+          <Card.Header as="h5" className="bg-primary text-white">
+            Journal entries
+          </Card.Header>
+          <Card.Body>
+            {entriesLoading && <Spinner animation="border" size="sm" />}
+            {entriesError && <Alert variant="danger">{entriesError}</Alert>}
+            {!entriesLoading && !entriesError && entries.length === 0 && (
+              <p className="text-muted mb-0">Ingen journal entries endnu.</p>
+            )}
+            {!entriesLoading && entries.length > 0 && (
+              <Accordion>
+                {entries.map((entry) => (
+                  <Accordion.Item key={entry.id} eventKey={String(entry.id)}>
+                    <Accordion.Header>
+                      <div className="d-flex flex-column">
+                        <strong>{entry.title}</strong>
+                        <small className="text-muted">
+                          {formatDateTime(entry.createdAt)} — {entry.entryType?.toLowerCase() || "—"}
+                        </small>
+                      </div>
+                    </Accordion.Header>
+                    <Accordion.Body>
+                      <p><strong>Type:</strong> {entry.entryType?.toLowerCase() || "—"}</p>
+                      <p><strong>Risikoniveau:</strong> {entry.riskAssessment || "—"}</p>
+                      <p><strong>Forfatter:</strong> {entry.authorUserId || "Ukendt"}</p>
+                      <p><strong>Oprettet:</strong> {formatDateTime(entry.createdAt)}</p>
+                      {formatDateTime(entry.updatedAt) &&
+                        formatDateTime(entry.updatedAt) !== formatDateTime(entry.createdAt) && (
+                          <p><strong>Opdateret:</strong> {formatDateTime(entry.updatedAt)}</p>
+                        )}
+                      <hr />
+                      <p style={{ whiteSpace: "pre-wrap" }}>{entry.content}</p>
+                    </Accordion.Body>
+                  </Accordion.Item>
+                ))}
+              </Accordion>
+            )}
+          </Card.Body>
+        </Card>
+      )}
     </Container>
   );
 }

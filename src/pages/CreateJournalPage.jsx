@@ -38,6 +38,7 @@ export default function CreateJournalPage({ addJournal }) {
       <JournalForm
         addJournal={addJournal}
         journalId={resident.journalId}
+        residentId={id}
       />
     </div>
   );

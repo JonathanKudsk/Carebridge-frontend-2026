@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { createJournalEntry } from "../../api/api";
 import { validateJournal } from "../../utils/validation";
 
-export default function JournalForm({ initialData, addJournal, journalId }) {
+export default function JournalForm({ initialData, addJournal, journalId, residentId }) {
   const navigate = useNavigate();
 
   const storedUser = (() => {
@@ -65,7 +65,7 @@ export default function JournalForm({ initialData, addJournal, journalId }) {
       }
 
       setStatus("success");
-      navigate("/journal-overview");
+      navigate(`/residents/${residentId}`);
     } catch (err) {
       console.error("Journal oprettelse fejlede:", err.response?.data || err);
       setStatus("error");
