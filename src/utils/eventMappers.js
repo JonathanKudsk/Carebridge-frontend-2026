@@ -71,3 +71,23 @@ function resolveAccessLevel(formState) {
 
   return "1";
 }
+
+function resolveStartAt(formState) {
+  if (formState.startAt) {
+    return formState.startAt;
+  }
+
+  if (formState.datetime) {
+    return formState.datetime;
+  }
+
+  if (!formState.date) {
+    return null;
+  }
+
+  const [year, month, day] = formState.date.split("-").map(Number);
+  const [hour = 0, minute = 0] = (formState.time || "00:00")
+    .split(":")
+    .map(Number);
+
+  return new Date(year, month - 1, day, hour, minute, 0).toISOStri
