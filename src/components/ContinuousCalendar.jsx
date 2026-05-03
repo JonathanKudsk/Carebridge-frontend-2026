@@ -79,6 +79,8 @@ export const ContinuousCalendar = ({
   ];
   const monthOptions = monthNames.map((m, i) => ({ name: m, value: `${i}` }));
 
+  const selectedAccessLevel = getAccessLevelOption(formData.accessLevel);
+
   const visuals = (type) => {
     const map = {
       Meeting: {
