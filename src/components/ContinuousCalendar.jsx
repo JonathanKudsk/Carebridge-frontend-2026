@@ -298,27 +298,32 @@ export const ContinuousCalendar = ({
   const handlePrevYear = () => setYear((y) => y - 1);
   const handleNextYear = () => setYear((y) => y + 1);
 
-  const handleDayClick = (day, month, yy) => {
+  const handleDayClick = useCallback((day, month, yy) => {
     if (!onClick) return;
     if (month < 0) onClick(day, 11, yy - 1);
     else onClick(day, month, yy);
-  };
+  }, [onClick]);
 
   const handleAddEventButton = () => openForm(null, new Date());
 
-  const handleInlineAddClick = (e, day, month, yy) => {
+  const handleInlineAddClick = useCallback(
+  (e, day, month, yy) => {
     e.preventDefault();
     e.stopPropagation();
+
     const m = month < 0 ? 11 : month;
     const y = month < 0 ? yy - 1 : yy;
-    openForm(null, new Date(y, m, day));
-  };
 
-  const handleEventOpen = (eObj, e) => {
+    openForm(null, new Date(y, m, day));
+  },
+  [openForm],
+);
+
+  const handleEventOpen = useCallback((eObj, e) => {
     e?.stopPropagation();
     setSelectedEvent(eObj);
     if (onEventClick) onEventClick(eObj);
-  };
+  }, [onEventClick]);
 
   const closeDetails = () => setSelectedEvent(null);
 
@@ -511,7 +516,7 @@ export const ContinuousCalendar = ({
         })}
       </div>
     ));
-  }, [year, eventsByDate]);
+  }, [year, eventsByDate, handleDayClick, handleEventOpen, handleInlineAddClick]);
 
   useEffect(() => {
     const container = containerRef.current;

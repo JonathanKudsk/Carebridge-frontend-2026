@@ -189,7 +189,7 @@ export default function CalendarPage() {
         alert(msg);
       }
     },
-    [typesReady, eventTypes, toUi],
+    [typesReady, eventTypes, toApi, toUi],
   );
 
   const handleDelete = useCallback(async (id) => {

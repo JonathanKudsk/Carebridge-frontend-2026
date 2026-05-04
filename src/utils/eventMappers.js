@@ -124,7 +124,7 @@ function buildStartAtFromDateAndTime(event) {
   return `${event.eventDate}T${time}`;
 }
 
-export function mapEventForCalendar(event, currentUser = null) {
+export function mapEventForCalendar(event) {
   if (!event) {
     return null;
   }
