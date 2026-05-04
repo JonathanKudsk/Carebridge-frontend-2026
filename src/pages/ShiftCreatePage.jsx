@@ -88,8 +88,8 @@ export default function ShiftCreatePage() {
         planPeriodId: Number(planPeriodId),
         locationId: Number(locationId),
         shiftType,
-        startTime,
-        endTime,
+        startShift: startTime,
+        endShift: endTime,
       });
 
       if (selectedUserId) {
