@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { createJournalEntry } from "../../api/api";
 import { validateJournal } from "../../utils/validation";
 
-export default function JournalForm({ initialData, addJournal }) {
+export default function JournalForm({ initialData, addJournal, journalId, residentId }) {
   const navigate = useNavigate();
 
   const storedUser = (() => {
@@ -43,6 +43,12 @@ export default function JournalForm({ initialData, addJournal }) {
       return;
     }
 
+    if (!journalId) {
+      console.error("Mangler journalId — kan ikke oprette journal entry.");
+      setStatus("error");
+      return;
+    }
+
     try {
       const payload = {
         title: formData.title,
@@ -52,14 +58,14 @@ export default function JournalForm({ initialData, addJournal }) {
         authorUserId: Number(formData.author || storedUser?.id),
       };
 
-      const newEntry = await createJournalEntry(formData.journalId || 1, payload);
+      const newEntry = await createJournalEntry(journalId, payload);
 
       if (addJournal) {
         addJournal((prev) => [...prev, newEntry]);
       }
 
       setStatus("success");
-      navigate("/journal-overview");
+      navigate(`/residents/${residentId}`);
     } catch (err) {
       console.error("Journal oprettelse fejlede:", err.response?.data || err);
       setStatus("error");

@@ -18,6 +18,11 @@ export async function createJournalEntry(journalId, entry) {
   return res.data;
 }
 
+export async function getJournalEntries(journalId) {
+  const res = await api.get(`/journals/${journalId}/journal-entries-data`);
+  return res.data;
+}
+
 export async function createResident(resident) {
   const res = await api.post("/residents/create", resident);
   return res.data;
