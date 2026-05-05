@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { createShift, getPlanPeriod } from "../services/shifts.js";
+import { useState, useEffect } from "react";
+import { createShift, getPlanPeriod, getCareWorkers, createShiftAssignment } from "../services/shifts.js";
 
 export default function ShiftCreatePage() {
   const [planPeriodId, setPlanPeriodId] = useState("");
@@ -8,7 +8,27 @@ export default function ShiftCreatePage() {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
 
+  const [careWorkers, setCareWorkers] = useState([]);
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    async function fetchCareWorkers() {
+      setLoadingUsers(true);
+      try {
+        const data = await getCareWorkers();
+        setCareWorkers(data);
+      } catch (err) {
+        console.error("Kunne ikke hente medarbejdere:", err);
+      } finally {
+        setLoadingUsers(false);
+      }
+    }
+    fetchCareWorkers();
+  }, []);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -39,6 +59,8 @@ export default function ShiftCreatePage() {
       return;
     }
 
+    setSubmitting(true);
+
     try {
       const pp = await getPlanPeriod(planPeriodId);
       const ppStart = pp?.startDate || pp?.start_date;
@@ -46,10 +68,10 @@ export default function ShiftCreatePage() {
 
       if (!ppStart || !ppEnd) {
         setErrors({ planPeriodId: "Planperioden har ikke start/slut dato." });
+        setSubmitting(false);
         return;
       }
 
-      // Treat planperiod as full days (inclusive)
       const startDate = new Date(ppStart + "T00:00:00");
       const endDate = new Date(ppEnd + "T23:59:59");
 
@@ -58,21 +80,29 @@ export default function ShiftCreatePage() {
           startTime: "Vagten skal ligge inden for planperioden.",
           endTime: "Vagten skal ligge inden for planperioden.",
         });
+        setSubmitting(false);
         return;
       }
 
-      await createShift({
+      const createdShift = await createShift({
         planPeriodId: Number(planPeriodId),
         locationId: Number(locationId),
         shiftType,
-        startTime,
-        endTime,
+        startShift: startTime,
+        endShift: endTime,
       });
 
+      if (selectedUserId) {
+        await createShiftAssignment(createdShift.id, Number(selectedUserId));
+      }
+
       setErrors({});
-      alert("Vagt oprettet.");
+      alert(selectedUserId ? "Vagt oprettet og medarbejder tildelt." : "Vagt oprettet.");
+
       setStartTime("");
       setEndTime("");
+      setSelectedUserId("");
+
     } catch (err) {
       const msg =
         err?.response?.data?.msg ||
@@ -90,6 +120,8 @@ export default function ShiftCreatePage() {
       }
 
       alert(msg);
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -162,8 +194,30 @@ export default function ShiftCreatePage() {
           {errors.endTime && <div>{errors.endTime}</div>}
         </p>
 
-        <button type="submit">
-          Gem
+        <p>
+          <label>
+            Tildel medarbejder (valgfrit):
+            <br />
+            {loadingUsers ? (
+              <span>Henter medarbejdere...</span>
+            ) : (
+              <select
+                value={selectedUserId}
+                onChange={(e) => setSelectedUserId(e.target.value)}
+              >
+                <option value="">-- Ingen tildeling --</option>
+                {careWorkers.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </label>
+        </p>
+
+        <button type="submit" disabled={submitting}>
+          {submitting ? "Gemmer..." : "Gem"}
         </button>
       </form>
     </div>
