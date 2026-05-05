@@ -17,6 +17,7 @@ export default function JournalForm({ initialData }) {
     }
   })();
 
+  //When we are gonna send the data to the backend it will be in this format
   const [formData, setFormData] = useState(
     initialData || {
       author: storedUser?.id || "",
@@ -71,6 +72,9 @@ export default function JournalForm({ initialData }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   }
 
+  /*From our API we will get a list of templates from the backend 
+  and will fill the dropdown bar with their names instead of 
+  hardcoding the names and always keep it updated with the database.*/
   const getAllTemplates = useCallback(() => {
     api
       .get("/templates")
@@ -89,11 +93,15 @@ export default function JournalForm({ initialData }) {
     getAllTemplates();
   }, [getAllTemplates]);
 
+/*When we select a template from the dropdown menu,
+  we will fetch the template info from the backend
+  and fill the form with the fields that are in the template.*/
   const getIndividualTemplateInfo = useCallback((templateId) => {
     api
       .get("/templates/" + templateId)
       .then((response) => {
         setTemplateFields(extractTemplateFields(response.data));
+        console.log("Template info for templateId", templateId, ":", response.data);
       })
       .catch((error) => {
         console.error("Error fetching template info:", error);
@@ -110,7 +118,11 @@ export default function JournalForm({ initialData }) {
     getIndividualTemplateInfo(formData.templateId);
   }, [formData.templateId, getIndividualTemplateInfo]);
 
+  /*This function will extract the fields from the template info
+    that we get from the backend and return them as a list of the input fields
+    we need so we can make them for the form*/
   function extractTemplateFields(templateData) {
+    console.log("Extracting fields from template data:", templateData);
     if (!Array.isArray(templateData?.fields)) {
       return [];
     }
@@ -124,11 +136,14 @@ export default function JournalForm({ initialData }) {
       .filter((field) => typeof field.fieldType === "string");
   }
 
+  /*This function is what takes the list of fields a template has 
+    and return the input fields for the frontend to render */
   function fieldTypeToInputField(fields) {
     if (!Array.isArray(fields)) {
       return null;
     }
 
+    /*This function will update the answers state when an input field changes*/
     return fields.map((field, index) => {
       function updateAnswer(value) {
         setAnswers((prev) => ({
@@ -178,6 +193,9 @@ export default function JournalForm({ initialData }) {
     });
   }
 
+  /*When we submit the data in the input fields, 
+  this will send the data to the backend 
+  in the format that the backend expects it*/
   async function handleSubmit(e) {
     e.preventDefault();
 
@@ -257,8 +275,8 @@ export default function JournalForm({ initialData }) {
             <Form.Group>
               <Form.Label>Type</Form.Label>
               <Form.Select
-                name="type"
-                value={formData.type}
+                name="templateId"
+                value={formData.templateId}
                 onChange={handleChange}
                 required
               >
