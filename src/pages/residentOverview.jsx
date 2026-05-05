@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Card, Form, ListGroup, Container, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import { getResidents } from "../api/api";
 
 export default function ResidentOverview() {
   const [residents, setResidents] = useState([]);
@@ -16,28 +17,8 @@ export default function ResidentOverview() {
 
   useEffect(() => {
     async function fetchResidents() {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        setError("No authentication token found");
-        setLoading(false);
-        return;
-      }
-
       try {
-        const res = await fetch("http://localhost:7070/api/residents/sorted", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-
-        const data = await res.json();
+        const data = await getResidents();
         setResidents(data);
       } catch (err) {
         console.error(err);
