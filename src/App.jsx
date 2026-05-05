@@ -17,6 +17,7 @@ import CreateResidentPage from "./pages/CreateResidentPage";
 import CreateUser from "./pages/(worker)/CreateUser";
 import LinkResidets from "./pages/(worker)/LinkResidents";
 import ShiftCreatePage from "./pages/ShiftCreatePage.jsx";
+import MedicationPage from "./pages/MedicationPage.jsx";
 import MessagePage from "./pages/(worker)/MessagePage.jsx";
 
 import {
@@ -114,6 +115,10 @@ export default function App() {
 
               {isAdmin && (
                 <>
+                  <Nav.Link as={Link} to="/medication">
+                    Medication
+                  </Nav.Link>
+
                   <Nav.Link as={Link} to="/create-resident">
                     Opret Resident
                   </Nav.Link>
@@ -185,6 +190,14 @@ export default function App() {
               element={
                 <PrivateRoute>
                   <ResidentOverview />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/medication"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN"]}>
+                  <MedicationPage />
                 </PrivateRoute>
               }
             />
