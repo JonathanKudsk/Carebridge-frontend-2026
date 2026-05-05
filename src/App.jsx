@@ -19,6 +19,7 @@ import LinkResidets from "./pages/(worker)/LinkResidents";
 import ShiftCreatePage from "./pages/ShiftCreatePage.jsx";
 import MedicationPage from "./pages/MedicationPage.jsx";
 import MessagePage from "./pages/(worker)/MessagePage.jsx";
+import Admin from "./pages/Admin.jsx";
 
 import {
   getToken,
@@ -126,6 +127,9 @@ export default function App() {
                   <Nav.Link as={Link} to="/admin/create-user">
                     Opret Bruger
                   </Nav.Link>
+                  <Nav.Link as={Link} to="/admin">
+                    Admin
+                  </Nav.Link>
                 </>
               )}
 
@@ -217,6 +221,15 @@ export default function App() {
               element={
                 <PrivateRoute allowedRoles={["ADMIN", "CAREWORKER"]}>
                   <MessagePage />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/admin"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN"]}>
+                  <Admin />
                 </PrivateRoute>
               }
             />
