@@ -16,6 +16,7 @@ import ShowJournalDetails from "./components/Journal/ShowJournalDetails";
 import CreateResidentPage from "./pages/CreateResidentPage";
 import CreateUser from "./pages/(worker)/CreateUser";
 import LinkResidets from "./pages/(worker)/LinkResidents";
+import Admin from "./pages/Admin.jsx";
 
 import {
   getToken,
@@ -116,6 +117,9 @@ export default function App() {
                   <Nav.Link as={Link} to="/admin/create-user">
                     Opret Bruger
                   </Nav.Link>
+                  <Nav.Link as={Link} to="/admin">
+                    Admin
+                  </Nav.Link>
                 </>
               )}
             </Nav>
@@ -184,6 +188,15 @@ export default function App() {
                   {" "}
                   {/* <-- Tjekker for Admin */}
                   <CreateResidentPage />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/admin"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN"]}>
+                  <Admin />
                 </PrivateRoute>
               }
             />
