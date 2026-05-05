@@ -16,6 +16,8 @@ import ShowJournalDetails from "./components/Journal/ShowJournalDetails";
 import CreateResidentPage from "./pages/CreateResidentPage";
 import CreateUser from "./pages/(worker)/CreateUser";
 import LinkResidets from "./pages/(worker)/LinkResidents";
+import ShiftCreatePage from "./pages/ShiftCreatePage.jsx";
+import MedicationPage from "./pages/MedicationPage.jsx";
 import MessagePage from "./pages/(worker)/MessagePage.jsx";
 import Admin from "./pages/Admin.jsx";
 
@@ -61,9 +63,10 @@ export default function App() {
   const [{ token, user }, setAuth] = useState(readAuth());
   const isAdmin = user?.role === "ADMIN";
   const isCareworker = user?.role === "CAREWORKER";
+  //const isCareworker = user?.role === "CAREWORKER";
+  //const isGuardian = user?.role === "GUARDIAN";
 
-
-    const [journals, setJournals] = useState([]);
+  const [journals, setJournals] = useState([]);
 
   // Listen for login/logout
   useEffect(() => {
@@ -113,6 +116,10 @@ export default function App() {
 
               {isAdmin && (
                 <>
+                  <Nav.Link as={Link} to="/medication">
+                    Medication
+                  </Nav.Link>
+
                   <Nav.Link as={Link} to="/create-resident">
                     Opret Resident
                   </Nav.Link>
@@ -191,6 +198,14 @@ export default function App() {
               }
             />
             <Route
+              path="/medication"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN"]}>
+                  <MedicationPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
               path="/create-resident"
               element={
                 <PrivateRoute allowedRoles={["ADMIN"]}>
@@ -236,6 +251,15 @@ export default function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/admin/create-user" element={<CreateUser />} />
             <Route path="/login" element={<Login />} />
+
+            <Route
+              path="/shifts/create"
+              element={
+                <PrivateRoute allowedRoles={["PLANNER"]}>
+                  <ShiftCreatePage />
+                </PrivateRoute>
+              }
+            />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
