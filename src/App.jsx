@@ -24,6 +24,8 @@ import {
   logout,
   onAuthChanged,
 } from "./services/auth";
+import { useSessionTimeout } from "./hooks/useSessionTimeout";
+import SessionWarningModal from "./components/SessionWarningModal";
 
 // Helper
 function readAuth() {
@@ -58,6 +60,7 @@ function PrivateRoute({ children, allowedRoles }) {
 export default function App() {
   const navigate = useNavigate();
   const [{ token, user }, setAuth] = useState(readAuth());
+  const [showWarning, setShowWarning] = useState(false);
   const isAdmin = user?.role === "ADMIN";
 
   const [journals, setJournals] = useState([]);
@@ -73,10 +76,16 @@ export default function App() {
     };
   }, []);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    setShowWarning(false);
+    await logout();
     navigate("/login", { replace: true });
   };
+
+  useSessionTimeout({
+    onWarn: () => setShowWarning(true),
+    onExpire: () => handleLogout(),
+  });
 
   return (
     <>
@@ -149,6 +158,12 @@ export default function App() {
           </Nav>
         </Container>
       </Navbar>
+
+      <SessionWarningModal
+        show={showWarning}
+        onRefreshed={() => setShowWarning(false)}
+        onExpired={() => handleLogout()}
+      />
 
       {/* Routes */}
       <SnackProvider>
