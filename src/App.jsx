@@ -16,6 +16,10 @@ import ShowJournalDetails from "./components/Journal/ShowJournalDetails";
 import CreateResidentPage from "./pages/CreateResidentPage";
 import CreateUser from "./pages/(worker)/CreateUser";
 import LinkResidets from "./pages/(worker)/LinkResidents";
+import ShiftCreatePage from "./pages/ShiftCreatePage.jsx";
+import MedicationPage from "./pages/MedicationPage.jsx";
+import MessagePage from "./pages/(worker)/MessagePage.jsx";
+import Admin from "./pages/Admin.jsx";
 
 import {
   getToken,
@@ -60,6 +64,9 @@ export default function App() {
   const navigate = useNavigate();
   const [{ token, user }, setAuth] = useState(readAuth());
   const isAdmin = user?.role === "ADMIN";
+  const isCareworker = user?.role === "CAREWORKER";
+  //const isCareworker = user?.role === "CAREWORKER";
+  //const isGuardian = user?.role === "GUARDIAN";
 
   const [journals, setJournals] = useState([]);
 
@@ -108,6 +115,10 @@ export default function App() {
 
               {isAdmin && (
                 <>
+                  <Nav.Link as={Link} to="/medication">
+                    Medication
+                  </Nav.Link>
+
                   <Nav.Link as={Link} to="/create-resident">
                     Opret Resident
                   </Nav.Link>
@@ -115,7 +126,16 @@ export default function App() {
                   <Nav.Link as={Link} to="/admin/create-user">
                     Opret Bruger
                   </Nav.Link>
+                  <Nav.Link as={Link} to="/admin">
+                    Admin
+                  </Nav.Link>
                 </>
+              )}
+
+              {(isAdmin || isCareworker) && (
+                <Nav.Link as={Link} to="/message-page">
+                  Beskeder
+                </Nav.Link>
               )}
             </Nav>
           )}
@@ -177,6 +197,14 @@ export default function App() {
               }
             />
             <Route
+              path="/medication"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN"]}>
+                  <MedicationPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
               path="/create-resident"
               element={
                 <PrivateRoute allowedRoles={["ADMIN"]}>
@@ -195,20 +223,27 @@ export default function App() {
                 </PrivateRoute>
               }
             />
-
-            <Route
-              path="/resident-overview"
-              element={
-                <PrivateRoute>
-                  <ResidentOverview />
-                </PrivateRoute>
-              }
-            />
             <Route
               path="/residents/:id"
               element={
                 <PrivateRoute>
                   <ResidentDetailsPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/message-page"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN", "CAREWORKER"]}>
+                  <MessagePage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN"]}>
+                  <Admin />
                 </PrivateRoute>
               }
             />
@@ -235,6 +270,15 @@ export default function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/admin/create-user" element={<CreateUser />} />
             <Route path="/login" element={<Login />} />
+
+            <Route
+              path="/shifts/create"
+              element={
+                <PrivateRoute allowedRoles={["PLANNER"]}>
+                  <ShiftCreatePage />
+                </PrivateRoute>
+              }
+            />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
