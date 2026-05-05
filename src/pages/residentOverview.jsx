@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { Card, Form, ListGroup, Container } from "react-bootstrap";
+import { Card, Form, ListGroup, Container, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { getResidents } from "../api/api";
 
@@ -11,12 +11,9 @@ export default function ResidentOverview() {
   const [sortKey, setSortKey] = useState("firstName");
   const [hasJournalOnly, setHasJournalOnly] = useState(false);
   const navigate = useNavigate();
-  // TODO: Sat til true som workaround — backend sender ikke `isactive`-feltet med
-  // ud i /residents-responsen, så filteret `resident.active === true` (linje ~38)
-  // filtrerer ALLE beboere væk når default er false.
-  // Fix bør laves af TEAM-4 (commit 0097142) eller backend: enten skal feltet
-  // serialiseres med i ResidentDTO, eller filteret skal fjernes/justeres.
-  const [showInactive, setShowInactive] = useState(true);
+  const [showInactive, setShowInactive] = useState(false);
+  const [page, setPage] = useState(0);
+  const residentsPerpage = 10;
 
   
   useEffect(() => {
@@ -104,27 +101,54 @@ export default function ResidentOverview() {
 
           <ListGroup>
             {filteredResidents.length > 0 ? (
-              filteredResidents.map((resident) => (
-               <ListGroup.Item 
-                  key={resident.id} 
-                  action
-                  onClick={() => navigate(`/residents/${resident.id}`)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  
-                  <div className="fw-semibold">
-                    {resident.firstName} {resident.lastName}
-                  </div>
-                  <div className="text-muted small">ID: {resident.id}</div>
-                  <div className="text-muted small">
-                    Journal: {resident.journalId ? resident.journalId : "Ikke tilknyttet"}
-                  </div>
-                </ListGroup.Item>
-              ))
+              filteredResidents
+                .slice(
+                  page * residentsPerpage,
+                  page * residentsPerpage + residentsPerpage,
+                )
+                .map((resident) => (
+                  <ListGroup.Item
+                    key={resident.id}
+                    action
+                    onClick={() => navigate(`/residents/${resident.id}`)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <div className="fw-semibold">
+                      {resident.firstName} {resident.lastName}
+                    </div>
+                    <div className="text-muted small">ID: {resident.id}</div>
+                    <div className="text-muted small">
+                      Journal:{" "}
+                      {resident.journalId
+                        ? resident.journalId
+                        : "Ikke tilknyttet"}
+                    </div>
+                  </ListGroup.Item>
+                ))
             ) : (
               <p className="text-center mt-3">Ingen beboere fundet.</p>
             )}
           </ListGroup>
+          <div className="d-flex justify-content-between mt-3">
+            <div>
+              {page > 0 && (
+                <Button
+                  variant="outline-primary"
+                  onClick={() => setPage(page - 1)}
+                >
+                  Forrige
+                </Button>
+              )}
+            </div>
+            <span className="align-self-center">Side {page + 1}</span>
+            <Button
+              variant="outline-primary"
+              disabled={page * residentsPerpage + residentsPerpage >= filteredResidents.length}
+              onClick={() => setPage(page + 1)}
+            >
+              Næste
+            </Button>
+          </div>
         </div>
       </div>
     </Container>
