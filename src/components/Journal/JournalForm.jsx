@@ -273,7 +273,7 @@ export default function JournalForm({ initialData }) {
         <Row className="mb-3">
           <Col>
             <Form.Group>
-              <Form.Label>Type</Form.Label>
+              <Form.Label>Skabelon Type</Form.Label>
               <Form.Select
                 name="templateId"
                 value={formData.templateId}
