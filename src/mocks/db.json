@@ -1,0 +1,17 @@
+{
+  "chat-rooms": [
+    {
+      "id": 1,
+      "name": "Alice",
+      "message": "Hey, are we still on for today?"
+    },
+    {
+      "id": 2,
+      "message": "I'll send you the files in a minute."
+    },
+    {
+      "id": 3,
+      "name": "Charlie"
+    }
+  ]
+}
