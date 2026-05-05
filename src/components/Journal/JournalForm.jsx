@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Form, Button, Row, Col, Card } from "react-bootstrap";
 import api from "../../services/api";
 import { createJournalEntry } from "../../api/api";
-import { useNavigate } from "react-router-dom";
 
-export default function JournalForm({ initialData }) {
+export default function JournalForm({
+  initialData,
+  addJournal,
+  journalId,
+  residentId,
+}) {
   const { journalId: routeJournalId } = useParams();
   const navigate = useNavigate();
 
@@ -17,11 +21,12 @@ export default function JournalForm({ initialData }) {
     }
   })();
 
-  //When we are gonna send the data to the backend it will be in this format
+  const resolvedJournalId = journalId || routeJournalId || initialData?.journalId || "";
+
   const [formData, setFormData] = useState(
     initialData || {
       author: storedUser?.id || "",
-      journalId: routeJournalId || "",
+      journalId: resolvedJournalId,
       title: "",
       templateId: "",
       entryType: "NOTE",
@@ -72,15 +77,11 @@ export default function JournalForm({ initialData }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   }
 
-  /*From our API we will get a list of templates from the backend 
-  and will fill the dropdown bar with their names instead of 
-  hardcoding the names and always keep it updated with the database.*/
   const getAllTemplates = useCallback(() => {
     api
       .get("/templates")
       .then((response) => {
         const templates = normalizeTemplateList(response.data);
-        console.log("Available templates:", templates);
         setAvailableTemplates(templates);
       })
       .catch((error) => {
@@ -93,15 +94,11 @@ export default function JournalForm({ initialData }) {
     getAllTemplates();
   }, [getAllTemplates]);
 
-/*When we select a template from the dropdown menu,
-  we will fetch the template info from the backend
-  and fill the form with the fields that are in the template.*/
   const getIndividualTemplateInfo = useCallback((templateId) => {
     api
       .get("/templates/" + templateId)
       .then((response) => {
         setTemplateFields(extractTemplateFields(response.data));
-        console.log("Template info for templateId", templateId, ":", response.data);
       })
       .catch((error) => {
         console.error("Error fetching template info:", error);
@@ -118,11 +115,7 @@ export default function JournalForm({ initialData }) {
     getIndividualTemplateInfo(formData.templateId);
   }, [formData.templateId, getIndividualTemplateInfo]);
 
-  /*This function will extract the fields from the template info
-    that we get from the backend and return them as a list of the input fields
-    we need so we can make them for the form*/
   function extractTemplateFields(templateData) {
-    console.log("Extracting fields from template data:", templateData);
     if (!Array.isArray(templateData?.fields)) {
       return [];
     }
@@ -136,14 +129,11 @@ export default function JournalForm({ initialData }) {
       .filter((field) => typeof field.fieldType === "string");
   }
 
-  /*This function is what takes the list of fields a template has 
-    and return the input fields for the frontend to render */
   function fieldTypeToInputField(fields) {
     if (!Array.isArray(fields)) {
       return null;
     }
 
-    /*This function will update the answers state when an input field changes*/
     return fields.map((field, index) => {
       function updateAnswer(value) {
         setAnswers((prev) => ({
@@ -156,7 +146,7 @@ export default function JournalForm({ initialData }) {
         case "TEXTFIELD":
           return (
             <Form.Group className="mb-3" key={`text-${field.id ?? index}`}>
-              <Form.Label>Tekstfelt</Form.Label>
+              <Form.Label>{field.title || "Tekstfelt"}</Form.Label>
               <Form.Control
                 type="text"
                 placeholder="Enter text"
@@ -178,7 +168,7 @@ export default function JournalForm({ initialData }) {
         case "NUMBERFIELD":
           return (
             <Form.Group className="mb-3" key={`number-${field.id ?? index}`}>
-              <Form.Label>Talfelt</Form.Label>
+              <Form.Label>{field.title || "Talfelt"}</Form.Label>
               <Form.Control
                 type="number"
                 placeholder="Enter number"
@@ -193,16 +183,14 @@ export default function JournalForm({ initialData }) {
     });
   }
 
-  /*When we submit the data in the input fields, 
-  this will send the data to the backend 
-  in the format that the backend expects it*/
   async function handleSubmit(e) {
     e.preventDefault();
 
-    const journalId = Number(
-      formData.journalId || routeJournalId || initialData?.journalId
+    const selectedJournalId = Number(
+      formData.journalId || journalId || routeJournalId || initialData?.journalId
     );
-    if (!Number.isInteger(journalId) || journalId <= 0) {
+
+    if (!Number.isInteger(selectedJournalId) || selectedJournalId <= 0) {
       console.error("Missing journalId for journal entry submit");
       return;
     }
@@ -219,10 +207,16 @@ export default function JournalForm({ initialData }) {
     };
 
     try {
-      const data = await createJournalEntry(journalId, payload);
-      console.log("Journal entry created:", data);
-      alert("Journal entry created successfully!");
-      navigate("/journal-overview");
+      const data = await createJournalEntry(selectedJournalId, payload);
+      if (typeof addJournal === "function") {
+        addJournal((prev) => [...prev, data]);
+      }
+
+      if (residentId) {
+        navigate(`/residents/${residentId}`);
+      } else {
+        navigate("/journal-overview");
+      }
     } catch (error) {
       console.error("Error creating journal entry:", error);
       alert("Failed to create journal entry. Please try again.");
@@ -235,67 +229,66 @@ export default function JournalForm({ initialData }) {
         <Card.Title>
           {initialData ? "Rediger journalindgang" : "Opret journalindgang"}
         </Card.Title>
-        
+
         <Form onSubmit={handleSubmit}>
-        <Row className="mb-3">
-          <Col>
-            <Form.Group>
-              <Form.Label>Journal ID</Form.Label>
-              <Form.Control
-                type="number"
-                name="journalId"
-                value={formData.journalId}
-                onChange={handleChange}
-                placeholder="Indtast journalens ID"
-                min="1"
-                required
-              />
-            </Form.Group>
-          </Col>
-        </Row>
+          <Row className="mb-3">
+            <Col>
+              <Form.Group>
+                <Form.Label>Journal ID</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="journalId"
+                  value={formData.journalId}
+                  onChange={handleChange}
+                  placeholder="Indtast journalens ID"
+                  min="1"
+                  required
+                />
+              </Form.Group>
+            </Col>
+          </Row>
 
-        <Row className="mb-3">
-          <Col>
-            <Form.Group>
-              <Form.Label>Titel</Form.Label>
-              <Form.Control
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                placeholder="Skriv en titel"
-                required
-              />
-            </Form.Group>
-          </Col>
-        </Row>
+          <Row className="mb-3">
+            <Col>
+              <Form.Group>
+                <Form.Label>Titel</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  placeholder="Skriv en titel"
+                  required
+                />
+              </Form.Group>
+            </Col>
+          </Row>
 
-        <Row className="mb-3">
-          <Col>
-            <Form.Group>
-              <Form.Label>Skabelon Type</Form.Label>
-              <Form.Select
-                name="templateId"
-                value={formData.templateId}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Vælg Type</option>
-                {availableTemplates.map((template, index) => {
-                  const templateValue = getTemplateValue(template, index);
+          <Row className="mb-3">
+            <Col>
+              <Form.Group>
+                <Form.Label>Skabelon Type</Form.Label>
+                <Form.Select
+                  name="templateId"
+                  value={formData.templateId}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Vælg Type</option>
+                  {availableTemplates.map((template, index) => {
+                    const templateValue = getTemplateValue(template, index);
 
-                  return (
-                    <option key={templateValue} value={templateValue}>
-                      {getTemplateLabel(template, index)}
-                    </option>
-                  );
-                })}
-              </Form.Select>
-            </Form.Group>
-          </Col>
-        </Row>
+                    return (
+                      <option key={templateValue} value={templateValue}>
+                        {getTemplateLabel(template, index)}
+                      </option>
+                    );
+                  })}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+          </Row>
 
-        
           <Form.Group className="mb-3">
             <Form.Label>Entry Type</Form.Label>
             <Form.Select

@@ -27,6 +27,8 @@ import {
   logout,
   onAuthChanged,
 } from "./services/auth";
+import ResidentDetailsPage from "./pages/ResidentDetailsPage.jsx";
+import EditResidentPage from "./pages/EditResidentPage.jsx";
 
 // Helper
 function readAuth() {
@@ -106,13 +108,10 @@ export default function App() {
                 Resident Overview
               </Nav.Link>
 
-              <Nav.Link as={Link} to="/create-journal">
-                Opret Journal Entry
-              </Nav.Link>
-
-              <Nav.Link as={Link} to="/journal-overview">
+              {/* TODO: Skal diskuteres med gruppen om det skal være en ting */}
+              {/* <Nav.Link as={Link} to="/journal-overview">
                 Journal Oversigt
-              </Nav.Link>
+              </Nav.Link> */}
 
               {isAdmin && (
                 <>
@@ -217,6 +216,22 @@ export default function App() {
             />
 
             <Route
+              path="/residents/edit/:id"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN"]}>
+                  <EditResidentPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/residents/:id"
+              element={
+                <PrivateRoute>
+                  <ResidentDetailsPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
               path="/message-page"
               element={
                 <PrivateRoute allowedRoles={["ADMIN", "CAREWORKER"]}>
@@ -224,7 +239,6 @@ export default function App() {
                 </PrivateRoute>
               }
             />
-
             <Route
               path="/admin"
               element={
@@ -236,13 +250,18 @@ export default function App() {
 
             {/* Journal Pages */}
             <Route
-              path="/create-journal"
-              element={<CreateJournalPage addJournal={setJournals} />}
+              path="/residents/:id/create-journal"
+              element={
+                <PrivateRoute>
+                  <CreateJournalPage addJournal={setJournals} />
+                </PrivateRoute>
+              }
             />
-            <Route
+            {/* TODO: Skal diskuteres med gruppen om det skal være en ting */}
+            {/* <Route
               path="/journal-overview"
               element={<JournalOverviewPage journals={journals} />}
-            />
+            /> */}
             <Route
               path="/journal/:journalId"
               element={<ShowJournalDetails journals={journals} />}
