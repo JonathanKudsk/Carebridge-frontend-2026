@@ -10,6 +10,7 @@ export default function ChatWindow({ chatRoom, users = [], onLastMessage }) {
     const [loading, setLoading] = useState(false);
     const [sending, setSending] = useState(false);
     const currentUser = getCurrentUser();
+    const isEmployed = currentUser?.isEmployed ?? true;
     const [currentUserId, setCurrentUserId] = useState(currentUser?.id ?? null);
     const bottomRef = useRef(null);
     const [messageError, setMessageError] = useState("");
@@ -104,11 +105,16 @@ export default function ChatWindow({ chatRoom, users = [], onLastMessage }) {
                     return (
                         <div
                             key={msg.id}
-                            className={`d-flex mb-2 ${isOwn ? "justify-content-end" : "justify-content-start"}`}
-                        >
+                            className={`d-flex mb-2 ${isOwn ? "justify-content-end" : "justify-content-start"}`}>                      
                             <div
-                                className={`p-2 rounded ${isOwn ? "bg-primary text-white" : "bg-light border text-dark"}`}
-                                style={{ maxWidth: "70%" }}
+                                className={`p-2 rounded ${
+                                    chatRoom?.active === false
+                                    ? "bg-secondary"
+                                    : (isOwn ? "bg-primary text-white" : "bg-light border text-dark")
+                                }`}
+                                style={{ 
+                                    maxWidth: "70%"          
+                                }}
                             >
                                 {!isOwn && (
                                     <div className="fw-bold small">
@@ -141,8 +147,8 @@ export default function ChatWindow({ chatRoom, users = [], onLastMessage }) {
                         setText(e.target.value);
                         setMessageError("");
                     }}
-                    placeholder="Skriv en besked..."
-                    disabled={sending}
+                    placeholder={!isEmployed || chatRoom?.active === false ? "Du kan ikke sende beskeder længere" : "Skriv en besked..."}
+                    disabled={sending || !isEmployed || chatRoom?.active === false}
                     isInvalid={!!messageError}
                 />
                 {messageError && (
@@ -151,7 +157,11 @@ export default function ChatWindow({ chatRoom, users = [], onLastMessage }) {
                     </Form.Control.Feedback>
                 )}
                 <Button type="submit" 
-                        disabled={sending || !text.trim() || !!messageError}>
+                        disabled={sending || !text.trim() || !!messageError || !isEmployed || chatRoom.active === false}
+                        style={{
+                             backgroundColor: (sending || !text.trim() || !!messageError || chatRoom?.active === false) ? "#6b7a8d" : undefined,
+                             borderColor: (sending || !text.trim() || !!messageError || !isEmployed || chatRoom?.active === false) ? "#6b7a8d" : undefined,
+                        }}>
                     {sending ? <Spinner animation="border" size="sm" /> : "Send"}
                 </Button>
             </Form>

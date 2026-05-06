@@ -10,6 +10,11 @@ function ChatRooms({ chatRooms, onSelectRoom, activeChatRoomId }) {
                         action
                         active={activeChatRoomId === room.id}
                         onClick={() => onSelectRoom?.(room)}
+                        style={{
+                            //color: room.active === false ? "#000000" : "transparent",
+                            backgroundColor: room.active === false ? "#6b7a8d" : "transparent",
+                            cursor: room.active === false ? "not-allowed" : "pointer",
+                        }}
                     >
                         { room.name
                             ? <div className="fw-bold">{room.name}</div>

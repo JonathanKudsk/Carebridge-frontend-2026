@@ -37,6 +37,7 @@ export async function login({ email, password }) {
         email: data.email,
         role: data.role,
         name: data.name || email.split("@")[0],
+        isEmployed: data.isEmployed ?? true,
       })
     );
     console.log("LOCALSTORAGE AFTER LOGIN", {
@@ -63,6 +64,7 @@ export async function register({ name, email, password }) {
         email: data.email,
         role: data.role,
         name: data.name || email.split("@")[0],
+        isEmployed: data.isEmployed ?? true,
       })
     );
   } catch (e) {
