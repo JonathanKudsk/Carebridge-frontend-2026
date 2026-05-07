@@ -17,6 +17,7 @@ import CreateResidentPage from "./pages/CreateResidentPage";
 import CreateUser from "./pages/(worker)/CreateUser";
 import LinkResidets from "./pages/(worker)/LinkResidents";
 import ShiftCreatePage from "./pages/ShiftCreatePage.jsx";
+import ShiftEditPage from "./pages/ShiftEditPage.jsx";
 
 import {
   getToken,
@@ -45,7 +46,7 @@ function PrivateRoute({ children, allowedRoles }) {
   if (allowedRoles && user?.role && !allowedRoles.includes(user.role)) {
     // Hvis rollen IKKE er i listen over tilladte roller
     console.warn(
-      `Adgang nægtet: Bruger med rolle '${user.role}' forsøgte at tilgå en beskyttet rute.`
+      `Adgang nægtet: Bruger med rolle '${user.role}' forsøgte at tilgå en beskyttet rute.`,
     );
     // Omdiriger til dashboardet eller en 'Adgang Nægtet'-side
     return <Navigate to="/" replace />;
@@ -61,7 +62,6 @@ export default function App() {
   const isAdmin = user?.role === "ADMIN";
   //const isCareworker = user?.role === "CAREWORKER";
   //const isGuardian = user?.role === "GUARDIAN";
-
 
   const [journals, setJournals] = useState([]);
 
@@ -213,8 +213,17 @@ export default function App() {
             <Route
               path="/shifts/create"
               element={
-                <PrivateRoute allowedRoles={["PLANNER"]}>
+                <PrivateRoute allowedRoles={["PLANNER", "ADMIN"]}>
                   <ShiftCreatePage />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/shifts/edit/:shiftId"
+              element={
+                <PrivateRoute allowedRoles={["PLANNER", "ADMIN"]}>
+                  <ShiftEditPage />
                 </PrivateRoute>
               }
             />
