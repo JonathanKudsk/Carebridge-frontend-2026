@@ -146,7 +146,7 @@ export default function JournalForm({
         case "TEXTFIELD":
           return (
             <Form.Group className="mb-3" key={`text-${field.id ?? index}`}>
-              <Form.Label>{field.title || "Tekstfelt"}</Form.Label>
+              <Form.Label>{field.title}</Form.Label>
               <Form.Control
                 type="text"
                 placeholder="Enter text"
@@ -168,7 +168,7 @@ export default function JournalForm({
         case "NUMBERFIELD":
           return (
             <Form.Group className="mb-3" key={`number-${field.id ?? index}`}>
-              <Form.Label>{field.title || "Talfelt"}</Form.Label>
+              <Form.Label>{field.title}</Form.Label>
               <Form.Control
                 type="number"
                 placeholder="Enter number"
