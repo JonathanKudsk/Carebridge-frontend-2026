@@ -10,13 +10,13 @@ export async function getEvent(id) {
   return data;
 }
 
-export async function createEvent(eventPayload) {
-  const { data } = await api.post('/events/', eventPayload);
+export async function createEvent(payload) {
+  const { data } = await api.post("/events/", payload);
   return data;
 }
 
-export async function updateEvent(id, eventPayload) {
-  const { data } = await api.put(`/events/${id}`, eventPayload);
+export async function updateEvent(eventId, payload) {
+  const { data } = await api.put(`/events/${eventId}`, payload);
   return data;
 }
 
@@ -50,4 +50,11 @@ export async function markEventSeen(id) {
 
 export async function unmarkEventSeen(id) {
   return api.delete(`/events/${id}/mark-seen`);
+}
+
+export async function fetchCalendarEvents(filters = {}) {
+  const { data } = await api.get("/events/", {
+    params: filters,
+  });
+  return data;
 }
