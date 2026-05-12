@@ -16,10 +16,12 @@ import ShowJournalDetails from "./components/Journal/ShowJournalDetails";
 import CreateResidentPage from "./pages/CreateResidentPage";
 import CreateUser from "./pages/(worker)/CreateUser";
 import LinkResidets from "./pages/(worker)/LinkResidents";
+import MedicationChartPage from "./pages/MedicationChartPage";
 import ShiftCreatePage from "./pages/ShiftCreatePage.jsx";
 import MedicationPage from "./pages/MedicationPage.jsx";
 import MessagePage from "./pages/(worker)/MessagePage.jsx";
 import Admin from "./pages/Admin.jsx";
+
 
 import {
   getToken,
@@ -27,6 +29,8 @@ import {
   logout,
   onAuthChanged,
 } from "./services/auth";
+import { useSessionTimeout } from "./hooks/useSessionTimeout";
+import SessionWarningModal from "./components/SessionWarningModal";
 import ResidentDetailsPage from "./pages/ResidentDetailsPage.jsx";
 import EditResidentPage from "./pages/EditResidentPage.jsx";
 
@@ -63,6 +67,7 @@ function PrivateRoute({ children, allowedRoles }) {
 export default function App() {
   const navigate = useNavigate();
   const [{ token, user }, setAuth] = useState(readAuth());
+  const [showWarning, setShowWarning] = useState(false);
   const isAdmin = user?.role === "ADMIN";
   const isCareworker = user?.role === "CAREWORKER";
   //const isCareworker = user?.role === "CAREWORKER";
@@ -81,10 +86,16 @@ export default function App() {
     };
   }, []);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    setShowWarning(false);
+    await logout();
     navigate("/login", { replace: true });
   };
+
+  useSessionTimeout({
+    onWarn: () => setShowWarning(true),
+    onExpire: () => handleLogout(),
+  });
 
   return (
     <>
@@ -112,6 +123,10 @@ export default function App() {
               {/* <Nav.Link as={Link} to="/journal-overview">
                 Journal Oversigt
               </Nav.Link> */}
+
+              <Nav.Link as={Link} to="/medication-chart/1">
+                Medication Chart
+              </Nav.Link>
 
               {isAdmin && (
                 <>
@@ -163,6 +178,12 @@ export default function App() {
           </Nav>
         </Container>
       </Navbar>
+
+      <SessionWarningModal
+        show={showWarning}
+        onRefreshed={() => setShowWarning(false)}
+        onExpired={() => handleLogout()}
+      />
 
       {/* Routes */}
       <SnackProvider>
@@ -266,6 +287,15 @@ export default function App() {
               path="/journal/:journalId"
               element={<ShowJournalDetails journals={journals} />}
             />
+            <Route
+              path="/medication-chart/:chartId"
+              element={
+                <PrivateRoute>
+                  <MedicationChartPage />
+                </PrivateRoute>
+              }
+            />
+
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/admin/create-user" element={<CreateUser />} />
