@@ -20,34 +20,13 @@ export function getCurrentUser() {
   }
 }
 
+// Step 1 — credentials only. Never writes to localStorage.
+// Returns { requiresTotpSetup, tempToken } or { requires2FA, tempToken }
 export async function login({ email, password }) {
   const { data } = await api.post("/auth/login", { email, password });
-  console.log("LOGIN RESPONSE", data);
-
-  // Adjust names if needed, but log first:
-  const token = data.token; // if backend sends "token"
-  console.log("ABOUT TO SAVE TOKEN", token);
-
-  try {
-    localStorage.setItem("token", token);
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
-        id: data.id,
-        email: data.email,
-        role: data.role,
-        name: data.name || email.split("@")[0],
-      })
-    );
-    console.log("LOCALSTORAGE AFTER LOGIN", {
-      token: localStorage.getItem("token"),
-      user: localStorage.getItem("user"),
-    });
-  } catch (e) {
-    console.error("FAILED TO WRITE LOCALSTORAGE", e);
+  if (data.token) {
+    storeFullSession(data);
   }
-
-  notifyAuthChanged();
   return data;
 }
 
@@ -63,7 +42,7 @@ export async function register({ name, email, password }) {
         email: data.email,
         role: data.role,
         name: data.name || email.split("@")[0],
-      })
+      }),
     );
   } catch (e) {
     console.error("FAILED TO WRITE LOCALSTORAGE (register)", e);
@@ -76,4 +55,48 @@ export function logout() {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
   notifyAuthChanged();
+}
+
+// Step 2a — first-time setup: fetch QR code URI using the SETUP tempToken
+export async function setupTotp(tempToken) {
+  const { data } = await api.get("/auth/2fa/setup", {
+    headers: { Authorization: `Bearer ${tempToken}` },
+  });
+  return data; // { secret, otpauthUri }
+}
+
+function storeFullSession(data) {
+  localStorage.setItem("token", data.token);
+  localStorage.setItem(
+    "user",
+    JSON.stringify({
+      id: data.id,
+      email: data.email,
+      role: data.role,
+      name: data.name,
+    }),
+  );
+  notifyAuthChanged();
+}
+
+// Step 2b — first-time setup: confirm 6-digit code, receive full 14-day JWT
+export async function confirmTotp(tempToken, code) {
+  const { data } = await api.post(
+    "/auth/2fa/confirm",
+    { code },
+    { headers: { Authorization: `Bearer ${tempToken}` } },
+  );
+  storeFullSession(data);
+  return data;
+}
+
+// Step 2c — returning user: verify 6-digit code, receive full 14-day JWT
+export async function verifyTotp(tempToken, code) {
+  const { data } = await api.post(
+    "/auth/2fa/verify",
+    { code },
+    { headers: { Authorization: `Bearer ${tempToken}` } },
+  );
+  storeFullSession(data);
+  return data;
 }
