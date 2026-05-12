@@ -17,6 +17,8 @@ import CreateResidentPage from "./pages/CreateResidentPage";
 import CreateUser from "./pages/(worker)/CreateUser";
 import LinkResidets from "./pages/(worker)/LinkResidents";
 import MedicationChartPage from "./pages/MedicationChartPage";
+import MedicationPage from "./pages/MedicationPage.jsx";
+
 
 import {
   getToken,
@@ -59,8 +61,6 @@ export default function App() {
   const navigate = useNavigate();
   const [{ token, user }, setAuth] = useState(readAuth());
   const isAdmin = user?.role === "ADMIN";
-  const isCareworker = user?.role === "CAREWORKER";
-  const isGuardian = user?.role === "GUARDIAN";
 
   const [journals, setJournals] = useState([]);
 
@@ -116,6 +116,10 @@ export default function App() {
 
               {isAdmin && (
                 <>
+                  <Nav.Link as={Link} to="/medication">
+                    Medication
+                  </Nav.Link>
+
                   <Nav.Link as={Link} to="/create-resident">
                     Opret Resident
                   </Nav.Link>
@@ -181,6 +185,14 @@ export default function App() {
               element={
                 <PrivateRoute>
                   <ResidentOverview />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/medication"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN"]}>
+                  <MedicationPage />
                 </PrivateRoute>
               }
             />
