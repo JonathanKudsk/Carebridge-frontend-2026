@@ -17,7 +17,10 @@ import CreateResidentPage from "./pages/CreateResidentPage";
 import CreateUser from "./pages/(worker)/CreateUser";
 import LinkResidets from "./pages/(worker)/LinkResidents";
 import MedicationChartPage from "./pages/MedicationChartPage";
+import ShiftCreatePage from "./pages/ShiftCreatePage.jsx";
 import MedicationPage from "./pages/MedicationPage.jsx";
+import MessagePage from "./pages/(worker)/MessagePage.jsx";
+import Admin from "./pages/Admin.jsx";
 
 
 import {
@@ -28,6 +31,8 @@ import {
 } from "./services/auth";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
 import SessionWarningModal from "./components/SessionWarningModal";
+import ResidentDetailsPage from "./pages/ResidentDetailsPage.jsx";
+import EditResidentPage from "./pages/EditResidentPage.jsx";
 
 // Helper
 function readAuth() {
@@ -64,6 +69,9 @@ export default function App() {
   const [{ token, user }, setAuth] = useState(readAuth());
   const [showWarning, setShowWarning] = useState(false);
   const isAdmin = user?.role === "ADMIN";
+  const isCareworker = user?.role === "CAREWORKER";
+  //const isCareworker = user?.role === "CAREWORKER";
+  //const isGuardian = user?.role === "GUARDIAN";
 
   const [journals, setJournals] = useState([]);
 
@@ -111,13 +119,10 @@ export default function App() {
                 Resident Overview
               </Nav.Link>
 
-              <Nav.Link as={Link} to="/create-journal">
-                Opret Journal Entry
-              </Nav.Link>
-
-              <Nav.Link as={Link} to="/journal-overview">
+              {/* TODO: Skal diskuteres med gruppen om det skal være en ting */}
+              {/* <Nav.Link as={Link} to="/journal-overview">
                 Journal Oversigt
-              </Nav.Link>
+              </Nav.Link> */}
 
               <Nav.Link as={Link} to="/medication-chart/1">
                 Medication Chart
@@ -136,7 +141,16 @@ export default function App() {
                   <Nav.Link as={Link} to="/admin/create-user">
                     Opret Bruger
                   </Nav.Link>
+                  <Nav.Link as={Link} to="/admin">
+                    Admin
+                  </Nav.Link>
                 </>
+              )}
+
+              {(isAdmin || isCareworker) && (
+                <Nav.Link as={Link} to="/message-page">
+                  Beskeder
+                </Nav.Link>
               )}
             </Nav>
           )}
@@ -222,15 +236,53 @@ export default function App() {
               }
             />
 
+            <Route
+              path="/residents/edit/:id"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN"]}>
+                  <EditResidentPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/residents/:id"
+              element={
+                <PrivateRoute>
+                  <ResidentDetailsPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/message-page"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN", "CAREWORKER"]}>
+                  <MessagePage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN"]}>
+                  <Admin />
+                </PrivateRoute>
+              }
+            />
+
             {/* Journal Pages */}
             <Route
-              path="/create-journal"
-              element={<CreateJournalPage addJournal={setJournals} />}
+              path="/residents/:id/create-journal"
+              element={
+                <PrivateRoute>
+                  <CreateJournalPage addJournal={setJournals} />
+                </PrivateRoute>
+              }
             />
-            <Route
+            {/* TODO: Skal diskuteres med gruppen om det skal være en ting */}
+            {/* <Route
               path="/journal-overview"
               element={<JournalOverviewPage journals={journals} />}
-            />
+            /> */}
             <Route
               path="/journal/:journalId"
               element={<ShowJournalDetails journals={journals} />}
@@ -247,7 +299,16 @@ export default function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/admin/create-user" element={<CreateUser />} />
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={token ? <Navigate to="/" replace /> : <Login />} />
+
+            <Route
+              path="/shifts/create"
+              element={
+                <PrivateRoute allowedRoles={["PLANNER"]}>
+                  <ShiftCreatePage />
+                </PrivateRoute>
+              }
+            />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
