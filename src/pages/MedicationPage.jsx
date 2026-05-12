@@ -16,3 +16,6 @@ export default function MedicationPage() {
         </div>
     );
 }
+
+
+//
