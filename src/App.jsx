@@ -16,7 +16,9 @@ import ShowJournalDetails from "./components/Journal/ShowJournalDetails";
 import CreateResidentPage from "./pages/CreateResidentPage";
 import CreateUser from "./pages/(worker)/CreateUser";
 import LinkResidets from "./pages/(worker)/LinkResidents";
+import MedicationChartPage from "./pages/MedicationChartPage";
 import MedicationPage from "./pages/MedicationPage.jsx";
+
 
 import {
   getToken,
@@ -106,6 +108,10 @@ export default function App() {
 
               <Nav.Link as={Link} to="/journal-overview">
                 Journal Oversigt
+              </Nav.Link>
+
+              <Nav.Link as={Link} to="/medication-chart/1">
+                Medication Chart
               </Nav.Link>
 
               {isAdmin && (
@@ -214,6 +220,15 @@ export default function App() {
               path="/journal/:journalId"
               element={<ShowJournalDetails journals={journals} />}
             />
+            <Route
+              path="/medication-chart/:chartId"
+              element={
+                <PrivateRoute>
+                  <MedicationChartPage />
+                </PrivateRoute>
+              }
+            />
+
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/admin/create-user" element={<CreateUser />} />
