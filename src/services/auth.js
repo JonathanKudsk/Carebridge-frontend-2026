@@ -1,7 +1,6 @@
 import api from "./api";
 
 const AUTH_CHANGED_EVENT = "auth-changed";
-
 export function notifyAuthChanged() {
   window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
 }
@@ -20,35 +19,7 @@ export function getCurrentUser() {
     return null;
   }
 }
-export function getSessionTimes() {
-  return {
-    warningAt: Number(localStorage.getItem("warningAt")) || null,
-    expiresAt: Number(localStorage.getItem("expiresAt")) || null,
-  };
-}
 
-function saveSession(data, emailFallback) {
-  localStorage.setItem("token", data.token);
-  localStorage.setItem("expiresAt", String(data.expiresAt));
-  localStorage.setItem("warningAt", String(data.warningAt));
-  if (data.email !== undefined) {
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
-        id: data.id,
-        email: data.email,
-        role: data.role,
-        name: data.name || (emailFallback ?? data.email).split("@")[0],
-      })
-    );
-  }
-}
-
-export async function login({ email, password }) {
-  const { data } = await api.post("/auth/login", { email, password });
-  saveSession(data, email);
-  notifyAuthChanged();
-  
 // Step 1 — credentials only. Never writes to localStorage.
 // Returns { requiresTotpSetup, tempToken } or { requires2FA, tempToken }
 export async function login({ email, password }) {
@@ -61,7 +32,6 @@ export async function login({ email, password }) {
 
 export async function register({ name, email, password }) {
   const { data } = await api.post("/auth/register", { name, email, password });
-  saveSession(data, email);
   const token = data.token;
   try {
     localStorage.setItem("token", token);
@@ -81,25 +51,9 @@ export async function register({ name, email, password }) {
   return data;
 }
 
-export async function refresh() {
-  const { data } = await api.post("/auth/refresh");
-  localStorage.setItem("token", data.token);
-  localStorage.setItem("expiresAt", String(data.expiresAt));
-  localStorage.setItem("warningAt", String(data.warningAt));
-  notifyAuthChanged();
-  return data;
-}
-
-export async function logout() {
-  try {
-    await api.post("/auth/logout");
-  } catch {
-    // token may already be invalid — proceed with local cleanup
-  }
+export function logout() {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
-  localStorage.removeItem("expiresAt");
-  localStorage.removeItem("warningAt");
   notifyAuthChanged();
 }
 
