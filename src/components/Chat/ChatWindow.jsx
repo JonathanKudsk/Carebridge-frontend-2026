@@ -56,6 +56,7 @@ export default function ChatWindow({ chatRoom, users = [], onLastMessage }) {
         if (messages.length > 0) {
             onLastMessage?.(chatRoom.id, messages[messages.length - 1].message);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [messages]);
 
     const validateMessage = (message) => {

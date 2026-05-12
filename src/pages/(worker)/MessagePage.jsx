@@ -66,7 +66,7 @@ export default function MessagePage() {
             return existing?.message ? { ...room, message: existing.message } : room;
           })
         );
-      } catch (_err) {
+      } catch {
         // polling errors are non-critical
       }
     }, 5000);
