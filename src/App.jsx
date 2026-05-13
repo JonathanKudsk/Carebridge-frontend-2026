@@ -17,6 +17,7 @@ import CreateResidentPage from "./pages/CreateResidentPage";
 import CreateUser from "./pages/(worker)/CreateUser";
 import LinkResidets from "./pages/(worker)/LinkResidents";
 import ShiftCreatePage from "./pages/ShiftCreatePage.jsx";
+import SchedulePage from "./pages/SchedulePage.jsx";
 import MedicationPage from "./pages/MedicationPage.jsx";
 import MessagePage from "./pages/(worker)/MessagePage.jsx";
 import Admin from "./pages/Admin.jsx";
@@ -69,6 +70,7 @@ export default function App() {
   const [showWarning, setShowWarning] = useState(false);
   const isAdmin = user?.role === "ADMIN";
   const isCareworker = user?.role === "CAREWORKER";
+  const isPlanner = user?.role === "PLANNER";
   //const isCareworker = user?.role === "CAREWORKER";
   //const isGuardian = user?.role === "GUARDIAN";
 
@@ -113,6 +115,12 @@ export default function App() {
               <Nav.Link as={Link} to="/calendar">
                 Calendar
               </Nav.Link>
+
+              {(isAdmin || isCareworker || isPlanner) && (
+                <Nav.Link as={Link} to="/schedule">
+                  Vagtplan
+                </Nav.Link>
+              )}
 
               <Nav.Link as={Link} to="/resident-overview">
                 Resident Overview
@@ -305,6 +313,15 @@ export default function App() {
               element={
                 <PrivateRoute allowedRoles={["PLANNER"]}>
                   <ShiftCreatePage />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/schedule"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN", "CAREWORKER", "PLANNER"]}>
+                  <SchedulePage />
                 </PrivateRoute>
               }
             />
