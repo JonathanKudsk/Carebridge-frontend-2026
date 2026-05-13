@@ -70,7 +70,6 @@ export default function App() {
   const [showWarning, setShowWarning] = useState(false);
   const isAdmin = user?.role === "ADMIN";
   const isCareworker = user?.role === "CAREWORKER";
-  const isPlanner = user?.role === "PLANNER";
   //const isCareworker = user?.role === "CAREWORKER";
   //const isGuardian = user?.role === "GUARDIAN";
 
@@ -116,11 +115,9 @@ export default function App() {
                 Calendar
               </Nav.Link>
 
-              {(isAdmin || isCareworker || isPlanner) && (
-                <Nav.Link as={Link} to="/schedule">
-                  Vagtplan
-                </Nav.Link>
-              )}
+              <Nav.Link as={Link} to="/schedule">
+                Vagtplan
+              </Nav.Link>
 
               <Nav.Link as={Link} to="/resident-overview">
                 Resident Overview
@@ -320,7 +317,7 @@ export default function App() {
             <Route
               path="/schedule"
               element={
-                <PrivateRoute allowedRoles={["ADMIN", "CAREWORKER", "PLANNER"]}>
+                <PrivateRoute>
                   <SchedulePage />
                 </PrivateRoute>
               }
