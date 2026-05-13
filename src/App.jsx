@@ -16,6 +16,8 @@ import ShowJournalDetails from "./components/Journal/ShowJournalDetails";
 import CreateResidentPage from "./pages/CreateResidentPage";
 import CreateUser from "./pages/(worker)/CreateUser";
 import LinkResidets from "./pages/(worker)/LinkResidents";
+import EmployeeOverviewPage from "./pages/admin/EmployeeOverviewPage";
+import EmployeeJournalPage from "./pages/admin/EmployeeJournalPage";
 
 import {
   getToken,
@@ -116,6 +118,10 @@ export default function App() {
                   <Nav.Link as={Link} to="/admin/create-user">
                     Opret Bruger
                   </Nav.Link>
+
+                  <Nav.Link as={Link} to="/admin/employees">
+                    Medarbejderoversigt
+                  </Nav.Link>
                 </>
               )}
             </Nav>
@@ -204,6 +210,22 @@ export default function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/admin/create-user" element={<CreateUser />} />
+            <Route
+              path="/admin/employees"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN"]}>
+                  <EmployeeOverviewPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/employees/:userId/journal"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN"]}>
+                  <EmployeeJournalPage />
+                </PrivateRoute>
+              }
+            />
             <Route path="/login" element={token ? <Navigate to="/" replace /> : <Login />} />
 
             <Route path="*" element={<NotFound />} />
