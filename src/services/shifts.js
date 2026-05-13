@@ -6,6 +6,18 @@ export async function getPlanPeriod(id) {
   return res.data;
 }
 
+export async function listPlanPeriods() {
+  const res = await api.get("/plan-periods", {
+    headers: {
+      Accept: "application/toon",
+    },
+    responseType: "text",
+    transformResponse: [(data) => data],
+  });
+
+  return ToonObjectMapper.parseArray(res.data);
+}
+
 export async function createShift(payload) {
   const res = await api.post("/shifts/", payload);
   return res.data;
