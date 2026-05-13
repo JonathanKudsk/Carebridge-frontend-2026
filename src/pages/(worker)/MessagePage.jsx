@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "react-bootstrap";
 import NewChatModal from "../../components/NewChatModal";
 import ChatRooms from "../../components/Chat/ChatRooms";
@@ -18,6 +19,10 @@ export default function MessagePage() {
   const usersRef = useRef([]);
   const myIdRef = useRef(null);
 
+  const [searchParams] = useSearchParams();
+  const selectedChatRoomId = searchParams.get("chatRoomId");
+
+  // Main data loading effect
   useEffect(() => {
     async function load() {
       try {
@@ -56,13 +61,34 @@ export default function MessagePage() {
         );
       } catch (err) {
         console.error("Could not load chat rooms", err);
-        // polling errors are non-critical
       }
     }, 5000);
 
     return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Effect to select room from URL parameter
+  useEffect(() => {
+    if (!selectedChatRoomId || chatRooms.length === 0) return;
+
+    const selectedRoom = chatRooms.find(
+      (room) => String(room.id) === String(selectedChatRoomId)
+    );
+
+    if (selectedRoom) {
+      setActiveChatRoom(selectedRoom);
+    }
+  }, [selectedChatRoomId, chatRooms]);
+
+  // Effect to keep active room in sync with updated room data
+  useEffect(() => {
+    if (!activeChatRoom) return;
+
+    const updatedRoom = chatRooms.find((room) => room.id === activeChatRoom.id);
+    if (updatedRoom && updatedRoom !== activeChatRoom) {
+      setActiveChatRoom(updatedRoom);
+    }
+  }, [chatRooms]);
 
   async function attachLastMessages(rooms) {
     return Promise.all(
@@ -96,11 +122,12 @@ export default function MessagePage() {
 
   return (
     <div className="d-flex" style={{ height: "calc(100vh - 80px)" }}>
-
       {/* Left */}
       <div className="border-end overflow-auto" style={{ width: 300 }}>
         <div className="p-3">
-          <Button className="w-100" onClick={() => setShowModal(true)}>Ny Chat</Button>
+          <Button className="w-100" onClick={() => setShowModal(true)}>
+            Ny Chat
+          </Button>
         </div>
         <ChatRooms
           chatRooms={chatRooms}
@@ -115,14 +142,14 @@ export default function MessagePage() {
           <>
             <div className="p-3 border-bottom fw-bold">{activeChatRoom.name}</div>
             <ChatWindow
-            chatRoom={activeChatRoom}
-            users={users}
-            onLastMessage={(roomId, text) =>
-              setChatRooms((prev) =>
-                prev.map((r) => (r.id === roomId ? { ...r, message: text } : r))
-              )
-            }
-          />
+              chatRoom={activeChatRoom}
+              users={users}
+              onLastMessage={(roomId, text) =>
+                setChatRooms((prev) =>
+                  prev.map((r) => (r.id === roomId ? { ...r, message: text } : r))
+                )
+              }
+            />
           </>
         ) : (
           <div className="d-flex align-items-center justify-content-center h-100 text-muted">
