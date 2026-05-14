@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { getSchedule } from "../services/shifts.js";
+import PeriodSelector from "../components/PeriodSelector.jsx";
 
 const dateFormatter = new Intl.DateTimeFormat("da-DK", {
   year: "numeric",
@@ -98,16 +99,7 @@ export default function SchedulePage() {
       <h2>Vagtplan</h2>
 
       <form onSubmit={onSubmit}>
-        <p>
-          <label>
-            Planperiode ID:
-            <br />
-            <input
-              value={periodId}
-              onChange={(e) => setPeriodId(e.target.value)}
-            />
-          </label>
-        </p>
+        <PeriodSelector value={periodId} onChange={setPeriodId} disabled={loading} />
 
         <button type="submit" disabled={loading}>
           {loading ? "Henter..." : "Hent vagtplan"}
