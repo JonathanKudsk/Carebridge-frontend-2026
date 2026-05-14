@@ -9,7 +9,7 @@ import {
   createShiftAssignment,
 } from "../services/shifts.js";
 import { useNavigate, useParams } from "react-router-dom";
-import { useSnack } from "../components/SnackProvider.jsx";
+import { useSnack } from "../hooks/useSnack.js";
 
 export default function ShiftEditPage() {
   const navigate = useNavigate();
