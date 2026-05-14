@@ -55,7 +55,7 @@ function PrivateRoute({ children, allowedRoles }) {
   if (allowedRoles && user?.role && !allowedRoles.includes(user.role)) {
     // Hvis rollen IKKE er i listen over tilladte roller
     console.warn(
-      `Adgang nægtet: Bruger med rolle '${user.role}' forsøgte at tilgå en beskyttet rute.`
+      `Adgang nægtet: Bruger med rolle '${user.role}' forsøgte at tilgå en beskyttet rute.`,
     );
     // Omdiriger til dashboardet eller en 'Adgang Nægtet'-side
     return <Navigate to="/" replace />;
@@ -145,6 +145,7 @@ export default function App() {
 
                   <Nav.Link as={Link} to="/admin/employees">
                     Medarbejderoversigt
+                  </Nav.Link>
                   <Nav.Link as={Link} to="/admin">
                     Admin
                   </Nav.Link>
@@ -319,7 +320,10 @@ export default function App() {
                 </PrivateRoute>
               }
             />
-            <Route path="/login" element={token ? <Navigate to="/" replace /> : <Login />} />
+            <Route
+              path="/login"
+              element={token ? <Navigate to="/" replace /> : <Login />}
+            />
 
             <Route
               path="/shifts/create"
