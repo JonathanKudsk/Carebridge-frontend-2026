@@ -123,10 +123,10 @@ export default function App() {
                 Resident Overview
               </Nav.Link>
 
-              {/* TODO: Skal diskuteres med gruppen om det skal være en ting */}
-              {/* <Nav.Link as={Link} to="/journal-overview">
+
+              {<Nav.Link as={Link} to="/journal-overview">
                 Journal Oversigt
-              </Nav.Link> */}
+              </Nav.Link>}
 
               <Nav.Link as={Link} to="/medication-chart/1">
                 Medication Chart
@@ -282,11 +282,10 @@ export default function App() {
                 </PrivateRoute>
               }
             />
-            {/* TODO: Skal diskuteres med gruppen om det skal være en ting */}
-            {/* <Route
+            {<Route
               path="/journal-overview"
               element={<JournalOverviewPage journals={journals} />}
-            /> */}
+            />}
             <Route
               path="/journal/:journalId"
               element={<ShowJournalDetails journals={journals} />}
