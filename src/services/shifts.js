@@ -33,6 +33,15 @@ export async function createShiftAssignment(shiftId, userId) {
   return res.data;
 }
 
+export async function getShift(id) {
+  const res = await api.get(`/shifts/${id}`);
+  return res.data;
+}
+
+export async function updateShift(id, payload) {
+  const res = await api.put(`/shifts/${id}`, payload);
+  return res.data;
+}
 export async function getSchedule(periodId) {
   const res = await api.get("/shifts/", {
     params: { periodId },
