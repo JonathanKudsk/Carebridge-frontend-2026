@@ -320,6 +320,11 @@ export default function App() {
               element={
                 <PrivateRoute allowedRoles={["PLANNER", "ADMIN"]}>
                   <ShiftEditPage />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
               path="/schedule"
               element={
                 <PrivateRoute>
