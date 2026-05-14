@@ -1,11 +1,15 @@
 import { useEffect, useState, useCallback } from "react";
 import { ContinuousCalendar } from "../components/ContinuousCalendar.jsx";
 import {
-  listEvents,
+  fetchCalendarEvents,
   createEvent,
   deleteEvent as deleteEventApi,
 } from "../services/events.js";
 import api from "../services/api";
+import {
+  buildCreateEventPayload,
+  mapEventForCalendar,
+} from "../utils/eventMappers.js";
 
 const normalizeDate = (raw) => {
   if (!raw && raw !== 0) return null;
@@ -42,7 +46,7 @@ export default function CalendarPage() {
       } catch (e) {
         console.error("Failed to load event types", e);
         setErr(
-          "Kunne ikke hente event-typer. Kør /api/populate eller opret typer som ADMIN."
+          "Kunne ikke hente event-typer. Kør /api/populate eller opret typer som ADMIN.",
         );
       } finally {
         setTypesReady(true);
@@ -53,6 +57,7 @@ export default function CalendarPage() {
   const toUi = useCallback(
     (e) => {
       if (!e) return null;
+      const mappedEvent = mapEventForCalendar(e);
       const dt = normalizeDate(e.startAt);
       if (!dt) {
         console.warn("Invalid startAt from backend", e);
@@ -63,6 +68,7 @@ export default function CalendarPage() {
         eventTypes.find((t) => t.id === e.eventTypeId)?.name || "Meeting";
 
       return {
+        ...mappedEvent,
         id: e.id,
         title: e.title,
         description: e.description || "",
@@ -78,13 +84,13 @@ export default function CalendarPage() {
         createdById: e.createdById,
       };
     },
-    [eventTypes]
+    [eventTypes],
   );
 
   useEffect(() => {
     (async () => {
       try {
-        const data = await listEvents();
+        const data = await fetchCalendarEvents();
         console.log("Raw backend events:", data);
         setEvents((data || []).map(toUi).filter(Boolean));
       } catch (ex) {
@@ -99,7 +105,7 @@ export default function CalendarPage() {
   const getTypeIdByName = (name) => {
     if (!name) return undefined;
     const hit = eventTypes.find(
-      (t) => (t.name || "").toLowerCase() === String(name).toLowerCase()
+      (t) => (t.name || "").toLowerCase() === String(name).toLowerCase(),
     );
     return hit?.id;
   };
@@ -121,7 +127,7 @@ export default function CalendarPage() {
         d || now.getDate(),
         hh || 0,
         mi || 0,
-        0
+        0,
       );
       if (
         dt < now &&
@@ -136,7 +142,7 @@ export default function CalendarPage() {
     const resolvedId = ui.eventTypeId ?? getTypeIdByName(ui.type);
     if (!resolvedId) {
       throw new Error(
-        "No matching EventType in database. Kør /api/populate eller opret en event type."
+        "No matching EventType in database. Kør /api/populate eller opret en event type.",
       );
     }
 
@@ -146,6 +152,12 @@ export default function CalendarPage() {
       startAt: dt.toISOString(),
       showOnBoard: !!ui.showOnBoard,
       eventTypeId: resolvedId,
+
+      residentId: ui.residentId,
+      isPrivate: !!ui.isPrivate,
+      accessLevel: ui.accessLevel || "1",
+      riskLevel: ui.riskLevel || 1,
+      usersWithAccessIds: ui.usersWithAccessIds || [],
     };
   };
 
@@ -154,12 +166,15 @@ export default function CalendarPage() {
       try {
         if (!typesReady || eventTypes.length === 0) {
           alert(
-            "Ingen Event Types i databasen. Kør /api/populate eller opret event types som ADMIN."
+            "Ingen Event Types i databasen. Kør /api/populate eller opret event types som ADMIN.",
           );
           return;
         }
 
-        const created = await createEvent(toApi(payloadFromCalendar));
+        const createEventPayload = buildCreateEventPayload(
+          toApi(payloadFromCalendar),
+        );
+        const created = await createEvent(createEventPayload);
         const mapped = toUi(created);
         if (mapped) {
           setEvents((prev) => [...prev, mapped]);
@@ -174,7 +189,7 @@ export default function CalendarPage() {
         alert(msg);
       }
     },
-    [typesReady, eventTypes, toUi]
+    [typesReady, eventTypes, toApi, toUi],
   );
 
   const handleDelete = useCallback(async (id) => {

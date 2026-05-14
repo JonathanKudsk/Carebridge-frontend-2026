@@ -7,11 +7,11 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (token && !config.headers.Authorization) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-/*api.interceptors.response.use(
+api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err?.response?.status === 401) {
@@ -20,7 +20,7 @@ api.interceptors.request.use((config) => {
     }
     return Promise.reject(err);
   }
-);*/
+);
 
 
 

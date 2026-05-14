@@ -8,6 +8,11 @@ import React, {
   useCallback,
 } from "react";
 
+import {
+  ACCESS_LEVEL_OPTIONS,
+  getAccessLevelOption,
+} from "../utils/eventMappers.js";
+
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const monthNames = [
   "January",
@@ -56,6 +61,12 @@ export const ContinuousCalendar = ({
     time: "",
     type: "Meeting",
     showOnBoard: true,
+
+    residentId: "",
+    isPrivate: false,
+    accessLevel: "1",
+    riskLevel: 1,
+    usersWithAccessIds: [],
   }));
 
   const eventTypes = [
@@ -67,6 +78,8 @@ export const ContinuousCalendar = ({
     "Other",
   ];
   const monthOptions = monthNames.map((m, i) => ({ name: m, value: `${i}` }));
+
+  const selectedAccessLevel = getAccessLevelOption(formData.accessLevel);
 
   const visuals = (type) => {
     const map = {
@@ -129,7 +142,7 @@ export const ContinuousCalendar = ({
       arr.sort(
         (a, b) =>
           (a.time || "").localeCompare(b.time || "") ||
-          (a.title || "").localeCompare(b.title || "")
+          (a.title || "").localeCompare(b.title || ""),
       );
     }
 
@@ -153,11 +166,17 @@ export const ContinuousCalendar = ({
         time: eventToEdit.time || "",
         type: eventToEdit.type || "Meeting",
         showOnBoard: !!eventToEdit.showOnBoard,
+        residentId: eventToEdit.residentId || "",
+        isPrivate: !!eventToEdit.isPrivate,
+        accessLevel: eventToEdit.accessLevel || "1",
+        riskLevel: eventToEdit.riskLevel || 1,
+        usersWithAccessIds: eventToEdit.usersWithAccessIds || [],
       });
     } else {
       const initialDate = dateObj
         ? toLocalYMD(dateObj)
         : toLocalYMD(new Date());
+
       setFormData({
         id: null,
         title: "",
@@ -166,6 +185,11 @@ export const ContinuousCalendar = ({
         time: "",
         type: "Meeting",
         showOnBoard: true,
+        residentId: "",
+        isPrivate: false,
+        accessLevel: "1",
+        riskLevel: 1,
+        usersWithAccessIds: [],
       });
     }
 
@@ -176,6 +200,7 @@ export const ContinuousCalendar = ({
     const e = {};
     if (!formData.title?.trim()) e.title = "Title is required";
     if (!formData.date) e.date = "Date is required";
+    if (!formData.residentId) e.residentId = "Resident is required";
     setFormErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -202,6 +227,12 @@ export const ContinuousCalendar = ({
       datetime: out.toISOString(),
       type: formData.type,
       showOnBoard: !!formData.showOnBoard,
+
+      residentId: formData.residentId,
+      isPrivate: !!formData.isPrivate,
+      accessLevel: formData.accessLevel || "1",
+      riskLevel: formData.riskLevel || 1,
+      usersWithAccessIds: formData.usersWithAccessIds || [],
     };
 
     if (onCreate) onCreate(payload);
@@ -215,6 +246,11 @@ export const ContinuousCalendar = ({
       description: "",
       time: "",
       showOnBoard: true,
+      residentId: "",
+      isPrivate: false,
+      accessLevel: "1",
+      riskLevel: 1,
+      usersWithAccessIds: [],
     }));
   };
 
@@ -223,7 +259,7 @@ export const ContinuousCalendar = ({
       (ref) =>
         ref &&
         ref.getAttribute("data-month") === `${monthIndex}` &&
-        ref.getAttribute("data-day") === `${dayIndex}`
+        ref.getAttribute("data-day") === `${dayIndex}`,
     );
     const target = dayRefs.current[idx];
     if (idx === -1 || !target) return;
@@ -262,27 +298,32 @@ export const ContinuousCalendar = ({
   const handlePrevYear = () => setYear((y) => y - 1);
   const handleNextYear = () => setYear((y) => y + 1);
 
-  const handleDayClick = (day, month, yy) => {
+  const handleDayClick = useCallback((day, month, yy) => {
     if (!onClick) return;
     if (month < 0) onClick(day, 11, yy - 1);
     else onClick(day, month, yy);
-  };
+  }, [onClick]);
 
   const handleAddEventButton = () => openForm(null, new Date());
 
-  const handleInlineAddClick = (e, day, month, yy) => {
+  const handleInlineAddClick = useCallback(
+  (e, day, month, yy) => {
     e.preventDefault();
     e.stopPropagation();
+
     const m = month < 0 ? 11 : month;
     const y = month < 0 ? yy - 1 : yy;
-    openForm(null, new Date(y, m, day));
-  };
 
-  const handleEventOpen = (eObj, e) => {
+    openForm(null, new Date(y, m, day));
+  },
+  [openForm],
+);
+
+  const handleEventOpen = useCallback((eObj, e) => {
     e?.stopPropagation();
     setSelectedEvent(eObj);
     if (onEventClick) onEventClick(eObj);
-  };
+  }, [onEventClick]);
 
   const closeDetails = () => setSelectedEvent(null);
 
@@ -399,7 +440,7 @@ export const ContinuousCalendar = ({
                       tabIndex={0}
                       onClick={(ev) => handleEventOpen(featured, ev)}
                       onKeyDown={keyActivate((ev) =>
-                        handleEventOpen(featured, ev)
+                        handleEventOpen(featured, ev),
                       )}
                       className="event-featured mt-2"
                       title={featured.title}
@@ -431,7 +472,7 @@ export const ContinuousCalendar = ({
                             tabIndex={0}
                             onClick={(ev) => handleEventOpen(eObj, ev)}
                             onKeyDown={keyActivate((ev) =>
-                              handleEventOpen(eObj, ev)
+                              handleEventOpen(eObj, ev),
                             )}
                             className="event-pill"
                             title={
@@ -475,7 +516,7 @@ export const ContinuousCalendar = ({
         })}
       </div>
     ));
-  }, [year, eventsByDate]);
+  }, [year, eventsByDate, handleDayClick, handleEventOpen, handleInlineAddClick]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -496,7 +537,7 @@ export const ContinuousCalendar = ({
         root: container,
         rootMargin: "-75% 0px -25% 0px",
         threshold: 0,
-      }
+      },
     );
 
     dayRefs.current.forEach((ref) => {
@@ -724,6 +765,132 @@ export const ContinuousCalendar = ({
                 </div>
               </div>
 
+              <div className="border-top mt-4 pt-3">
+                <h3 className="h6 mb-3">Access settings</h3>
+                <div className="mb-3">
+                  <label className="form-label">
+                    Resident <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    className={
+                      "form-control " +
+                      (formErrors.residentId ? "is-invalid" : "")
+                    }
+                    value={formData.residentId}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        residentId: e.target.value,
+                      })
+                    }
+                    placeholder="Resident ID"
+                    required
+                  />
+                  {formErrors.residentId && (
+                    <div className="invalid-feedback">
+                      {formErrors.residentId}
+                    </div>
+                  )}
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Users with access</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={(formData.usersWithAccessIds || []).join(",")}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        usersWithAccessIds: e.target.value
+                          .split(",")
+                          .map((id) => id.trim())
+                          .filter((id) => id.length > 0),
+                      })
+                    }
+                    placeholder="User IDs separated by comma, e.g. 1,2,3"
+                  />
+                  <div className="form-text">
+                    Enter user IDs separated by comma. Backend validates the
+                    final access list.
+                  </div>
+                </div>
+                <div className="form-check mb-3">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="isPrivate"
+                    checked={!!formData.isPrivate}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        isPrivate: e.target.checked,
+                      })
+                    }
+                  />
+                  <label className="form-check-label" htmlFor="isPrivate">
+                    Private event
+                  </label>
+                </div>
+
+                {formData.isPrivate && (
+                  <p className="small text-muted">
+                    Private events use only the access list, not access-level.
+                  </p>
+                )}
+
+                <div className="row g-3">
+                  <div className="col-12 col-sm-6">
+                    <label className="form-label">Access level</label>
+                    <select
+                      className="form-select"
+                      value={formData.accessLevel}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          accessLevel: e.target.value,
+                          riskLevel: Number(e.target.value),
+                        })
+                      }
+                    >
+                      {ACCESS_LEVEL_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="col-12 col-sm-6">
+                    <label className="form-label">Risk level</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="5"
+                      className="form-control"
+                      value={formData.riskLevel}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          riskLevel: Number(e.target.value),
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-3 small">
+                  <div>
+                    <strong>Risk description:</strong>{" "}
+                    {selectedAccessLevel.riskDescription}
+                  </div>
+                  <div>
+                    <strong>Risk color:</strong> {selectedAccessLevel.riskColor}
+                  </div>
+                </div>
+              </div>
+
               <div className="d-flex justify-content-end gap-2 mt-4">
                 <button
                   type="button"
@@ -805,7 +972,7 @@ export const ContinuousCalendar = ({
                       : new Date(
                           `${selectedEvent.date || ""}T${
                             selectedEvent.time || "00:00"
-                          }`
+                          }`,
                         );
                     return isNaN(base.getTime()) ? "" : base.toLocaleString();
                   })()}
