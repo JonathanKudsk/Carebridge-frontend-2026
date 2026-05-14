@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { getShift, updateShift, getPlanPeriod, getCareWorkers, createShiftAssignment } from "../services/shifts.js";
 import { useParams } from "react-router-dom";
 
-export default function ShiftEditPage({ shiftId }) {
+export default function ShiftEditPage() {
+  const { shiftId } = useParams();
   const [planPeriodId, setPlanPeriodId] = useState("");
   const [locationId, setLocationId] = useState("");
   const [shiftType, setShiftType] = useState("DAY");
