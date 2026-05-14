@@ -20,6 +20,7 @@ import ShiftCreatePage from "./pages/ShiftCreatePage.jsx";
 import MedicationPage from "./pages/MedicationPage.jsx";
 import MessagePage from "./pages/(worker)/MessagePage.jsx";
 import Admin from "./pages/Admin.jsx";
+import Substitute from "./pages/Substitute.jsx";
 
 import {
   getToken,
@@ -130,6 +131,9 @@ export default function App() {
                   <Nav.Link as={Link} to="/admin">
                     Admin
                   </Nav.Link>
+                  <Nav.Link as={Link} to="/substitute">
+                    Substitute
+                  </Nav.Link>
                 </>
               )}
 
@@ -205,6 +209,16 @@ export default function App() {
                 </PrivateRoute>
               }
             />
+
+            <Route
+              path="/substitute"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN"]}>
+                  <Substitute />
+                </PrivateRoute>
+              }
+            />
+
             <Route
               path="/create-resident"
               element={
