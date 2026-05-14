@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useState, useCallback, useContext } from "react";
-import { ErrorIcon, SuccessIcon } from "./icons/SnackIcons.jsx";
+import { getVariantIcon } from "../utils/snackUtils.jsx";
 
 const SnackContext = createContext(undefined);
 
@@ -63,17 +63,6 @@ export function useSnack() {
     throw new Error("useSnack must be used within SnackProvider");
   }
   return context;
-}
-
-function getVariantIcon(variant) {
-  switch (variant) {
-    case "success":
-      return <SuccessIcon />;
-    case "error":
-      return <ErrorIcon />;
-    default:
-      return null;
-  }
 }
 
 export default SnackProvider;
