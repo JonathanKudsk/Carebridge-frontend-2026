@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { getSchedule } from "../services/shifts.js";
 import PeriodSelector from "../components/PeriodSelector.jsx";
 
@@ -60,9 +60,27 @@ function normalizeShift(shift, index) {
 export default function SchedulePage() {
   const [periodId, setPeriodId] = useState("");
   const [shifts, setShifts] = useState([]);
+  const [selectedLocation, setSelectedLocation] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
+
+  const locations = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          shifts
+            .map((shift) => shift.location)
+            .filter((location) => typeof location === "string" && location.trim()),
+        ),
+      ).sort((a, b) => a.localeCompare(b, "da-DK")),
+    [shifts],
+  );
+
+  const visibleShifts = useMemo(() => {
+    if (!selectedLocation) return shifts;
+    return shifts.filter((shift) => shift.location === selectedLocation);
+  }, [selectedLocation, shifts]);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -80,6 +98,7 @@ export default function SchedulePage() {
 
     try {
       const data = await getSchedule(periodId.trim());
+      setSelectedLocation("");
       setShifts((Array.isArray(data) ? data : []).map(normalizeShift));
     } catch (err) {
       console.error("Kunne ikke hente vagtplan:", err);
@@ -101,6 +120,25 @@ export default function SchedulePage() {
       <form onSubmit={onSubmit}>
         <PeriodSelector value={periodId} onChange={setPeriodId} disabled={loading} />
 
+        <p>
+          <label>
+            Lokation:
+            <br />
+            <select
+              value={selectedLocation}
+              onChange={(e) => setSelectedLocation(e.target.value)}
+              disabled={loading || locations.length === 0}
+            >
+              <option value="">Alle lokationer</option>
+              {locations.map((location) => (
+                <option key={location} value={location}>
+                  {location}
+                </option>
+              ))}
+            </select>
+          </label>
+        </p>
+
         <button type="submit" disabled={loading}>
           {loading ? "Henter..." : "Hent vagtplan"}
         </button>
@@ -108,13 +146,13 @@ export default function SchedulePage() {
 
       {error && <p style={{ color: "red", marginTop: "1rem" }}>{error}</p>}
 
-      {!error && hasSearched && !loading && shifts.length === 0 && (
+      {!error && hasSearched && !loading && visibleShifts.length === 0 && (
         <p style={{ marginTop: "1rem" }}>Ingen vagter i denne periode.</p>
       )}
 
-      {shifts.length > 0 && (
+      {visibleShifts.length > 0 && (
         <div style={{ marginTop: "1rem" }}>
-          {shifts.map((shift) => (
+          {visibleShifts.map((shift) => (
             <div
               key={shift.id}
               style={{
