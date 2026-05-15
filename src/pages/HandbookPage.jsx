@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { Container, Alert, Spinner } from "react-bootstrap";
 import { getHandbook } from "../api/handbookApi.js";
 import { getCurrentUser } from "../api/authApi.js";
-import HandbookTabs from "./HandbookTabs.jsx";
-import HandbookContent from "./HandbookContent.jsx";
+import HandbookTabs from "../components/handbook/HandbookTabs.jsx";
+import HandbookContent from "../components/handbook/HandbookContent.jsx";
+import HandbookEditor from "../components/handbook/HandbookEditor.jsx";
 
 function HandbookPage() {
     const [handbook, setHandbook] = useState(null);
@@ -12,8 +13,15 @@ function HandbookPage() {
     const [error, setError] = useState(null);
 
     const user = getCurrentUser();
+    const isAdmin = user?.role === "ADMIN";
 
     useEffect(() => {
+        if (!user) {
+            setError("Could not load handbook.");
+            setLoading(false);
+            return;
+        }
+
         async function fetchHandbook() {
             try {
                 const data = await getHandbook(user.institutionId);
@@ -22,13 +30,25 @@ function HandbookPage() {
                     setActiveTab(data.handbookTabs[0]);
                 }
             } catch {
-            setError("Could not load handbook.");
+                setError("Could not load handbook.");
             } finally {
                 setLoading(false);
             }
         }
+
         fetchHandbook();
-    }, [user.institutionId]);
+    }, [user]);
+
+    // Syncs the updated tab content into local state after a successful save
+    const handleSaved = (updatedTab) => {
+        setHandbook(prev => ({
+            ...prev,
+            handbookTabs: prev.handbookTabs.map(t =>
+                t.id === updatedTab.id ? updatedTab : t
+            )
+        }));
+        setActiveTab(updatedTab);
+    };
 
     if (loading) return (
         <Container className="mt-5 text-center">
@@ -51,7 +71,10 @@ function HandbookPage() {
                 onSelectTab={setActiveTab}
                 userRole={user.role}
             />
-            <HandbookContent tab={activeTab} />
+            {isAdmin
+                ? <HandbookEditor tab={activeTab} onSaved={handleSaved} />
+                : <HandbookContent tab={activeTab} />
+            }
         </Container>
     );
 }
