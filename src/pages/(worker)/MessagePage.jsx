@@ -9,19 +9,26 @@ import { getCurrentUser } from "../../services/auth";
 import { getUsers } from "../../api/api";
 
 export default function MessagePage() {
+  const PAGE_SIZE = 5;
   const [showModal, setShowModal] = useState(false);
   const [chatRooms, setChatRooms] = useState([]);
   const [activeChatRoom, setActiveChatRoom] = useState(null);
   const [users, setUsers] = useState([]);
   const [myId, setMyId] = useState(null);
+  const [page, setPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
   const currentUser = getCurrentUser();
   const usersRef = useRef([]);
   const myIdRef = useRef(null);
+  const pageRef = useRef(0);
 
   useEffect(() => {
     async function load() {
       try {
-        const rooms = await listChatRooms();
+        const response = await listChatRooms({ page: 0, size: PAGE_SIZE });
+        const rooms = response.chatRooms ?? response;
+        const total = response.totalCount ?? rooms.length;
         const allUsers = await getUsers().catch(() => []);
         setUsers(allUsers);
         usersRef.current = allUsers;
@@ -29,6 +36,7 @@ export default function MessagePage() {
         const resolvedId = me?.id ?? currentUser?.id;
         setMyId(resolvedId);
         myIdRef.current = resolvedId;
+        setTotalCount(total);
         const myRooms = rooms.filter((room) =>
           room.members?.some((m) => m.userId === resolvedId)
         );
@@ -43,7 +51,11 @@ export default function MessagePage() {
 
     const interval = setInterval(async () => {
       try {
-        const rooms = await listChatRooms();
+        const loadedSize = (pageRef.current + 1) * PAGE_SIZE;
+        const response = await listChatRooms({ page: 0, size: loadedSize });
+        const rooms = response.chatRooms ?? response;
+        const total = response.totalCount ?? rooms.length;
+        setTotalCount(total);
         const myRooms = rooms.filter((room) =>
           room.members?.some((m) => m.userId === myIdRef.current)
         );
@@ -54,8 +66,7 @@ export default function MessagePage() {
             return existing?.message ? { ...room, message: existing.message } : room;
           })
         );
-      } catch (err) {
-        console.error("Could not load chat rooms", err);
+      } catch {
         // polling errors are non-critical
       }
     }, 5000);
@@ -86,6 +97,27 @@ export default function MessagePage() {
     });
   }
 
+  async function loadMore() {
+    setLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const response = await listChatRooms({ page: nextPage, size: PAGE_SIZE });
+      const rooms = response.chatRooms ?? response;
+      const myRooms = rooms.filter((room) =>
+        room.members?.some((m) => m.userId === myId)
+      );
+      const enriched = enrichRooms(myRooms, users, myId);
+      const withMessages = await attachLastMessages(enriched);
+      setChatRooms((prev) => [...prev, ...withMessages]);
+      setPage(nextPage);
+      pageRef.current = nextPage;
+    } catch (err) {
+      console.error("Could not load more chat rooms", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  }
+
   function handleStartChat(chatRoom) {
     const enriched = enrichRooms([chatRoom], users, myId)[0];
     setChatRooms((prev) =>
@@ -107,6 +139,13 @@ export default function MessagePage() {
           onSelectRoom={setActiveChatRoom}
           activeChatRoomId={activeChatRoom?.id}
         />
+        {chatRooms.length < totalCount && (
+          <div className="p-3">
+            <Button variant="outline-secondary" className="w-100" onClick={loadMore} disabled={loadingMore}>
+              {loadingMore ? "Henter..." : "Vis flere"}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Right */}
