@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Container, Alert, Spinner } from "react-bootstrap";
-import { getHandbook } from "../api/handbookApi.js";
-import { getCurrentUser } from "../api/authApi.js";
+import { getHandbook } from "../services/handbook.js";
+import { getCurrentUser } from "../services/auth.js";;
 import HandbookTabs from "../components/handbook/HandbookTabs.jsx";
 import HandbookContent from "../components/handbook/HandbookContent.jsx";
 import HandbookEditor from "../components/handbook/HandbookEditor.jsx";
@@ -24,7 +24,7 @@ function HandbookPage() {
 
         async function fetchHandbook() {
             try {
-                const data = await getHandbook(user.institutionId);
+                const data = await getHandbook();
                 setHandbook(data);
                 if (data.handbookTabs?.length > 0) {
                     setActiveTab(data.handbookTabs[0]);
