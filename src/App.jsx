@@ -21,6 +21,7 @@ import MedicationPage from "./pages/MedicationPage.jsx";
 import MessagePage from "./pages/(worker)/MessagePage.jsx";
 import Admin from "./pages/Admin.jsx";
 import MedicationChartPage from "./pages/MedicationChartPage";
+import SavingsGoalsPage from "./pages/SavingsGoalsPage";
 
 import {
   getToken,
@@ -248,6 +249,14 @@ export default function App() {
               element={
                 <PrivateRoute>
                   <ResidentDetailsPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/residents/:id/savings-goals"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN", "CAREWORKER"]}>
+                  <SavingsGoalsPage />
                 </PrivateRoute>
               }
             />
