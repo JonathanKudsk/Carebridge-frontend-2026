@@ -124,10 +124,6 @@ export default function App() {
                 Journal Oversigt
               </Nav.Link> */}
 
-              <Nav.Link as={Link} to="/medication-chart/1">
-                Medication Chart
-              </Nav.Link>
-
               {isAdmin && (
                 <>
                   <Nav.Link as={Link} to="/medication">
@@ -295,14 +291,14 @@ export default function App() {
               path="/journal/:journalId"
               element={<ShowJournalDetails journals={journals} />}
             />
-            <Route
-              path="/medication-chart/:chartId"
-              element={
-                <PrivateRoute>
-                  <MedicationChartPage />
-                </PrivateRoute>
-              }
-            />
+              <Route
+                  path="/medication-chart/:residentId"
+                  element={
+                      <PrivateRoute>
+                          <MedicationChartPage />
+                      </PrivateRoute>
+                  }
+              />
 
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
