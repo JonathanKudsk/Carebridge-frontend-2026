@@ -71,13 +71,8 @@ export default function MessagePage() {
             return existing?.message ? { ...room, message: existing.message } : room;
           })
         );
-<<<<<<< HEAD
-      } catch (err) {
-        console.error("Could not load chat rooms", err);
-=======
       } catch {
         // polling errors are non-critical
->>>>>>> developer
       }
     }, 5000);
 
