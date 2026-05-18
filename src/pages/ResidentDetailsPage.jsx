@@ -38,8 +38,7 @@ export default function ResidentDetailsPage() {
                 setBudget(response.data);
 
             } catch (err) {
-
-                console.log("No budget found");
+                console.log(err);
             }
         }
 
