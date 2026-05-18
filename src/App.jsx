@@ -17,6 +17,8 @@ import CreateResidentPage from "./pages/CreateResidentPage";
 import CreateUser from "./pages/(worker)/CreateUser";
 import LinkResidets from "./pages/(worker)/LinkResidents";
 import ShiftCreatePage from "./pages/ShiftCreatePage.jsx";
+import ShiftEditPage from "./pages/ShiftEditPage.jsx";
+import SchedulePage from "./pages/SchedulePage.jsx";
 import MedicationPage from "./pages/MedicationPage.jsx";
 import MessagePage from "./pages/(worker)/MessagePage.jsx";
 import Admin from "./pages/Admin.jsx";
@@ -54,7 +56,7 @@ function PrivateRoute({ children, allowedRoles }) {
   if (allowedRoles && user?.role && !allowedRoles.includes(user.role)) {
     // Hvis rollen IKKE er i listen over tilladte roller
     console.warn(
-      `Adgang nægtet: Bruger med rolle '${user.role}' forsøgte at tilgå en beskyttet rute.`
+      `Adgang nægtet: Bruger med rolle '${user.role}' forsøgte at tilgå en beskyttet rute.`,
     );
     // Omdiriger til dashboardet eller en 'Adgang Nægtet'-side
     return <Navigate to="/" replace />;
@@ -115,14 +117,18 @@ export default function App() {
                 Calendar
               </Nav.Link>
 
+              <Nav.Link as={Link} to="/schedule">
+                Vagtplan
+              </Nav.Link>
+
               <Nav.Link as={Link} to="/resident-overview">
                 Resident Overview
               </Nav.Link>
 
-              {/* TODO: Skal diskuteres med gruppen om det skal være en ting */}
-              {/* <Nav.Link as={Link} to="/journal-overview">
+
+              {<Nav.Link as={Link} to="/journal-overview">
                 Journal Oversigt
-              </Nav.Link> */}
+              </Nav.Link>}
 
               <Nav.Link as={Link} to="/medication-chart/1">
                 Medication Chart
@@ -275,6 +281,10 @@ export default function App() {
                 </PrivateRoute>
               }
             />
+            {<Route
+              path="/journal-overview"
+              element={<JournalOverviewPage journals={journals} />}
+            />}
             <Route
               path="/journal/:journalId"
               element={<ShowJournalDetails journals={journals} />}
@@ -296,8 +306,26 @@ export default function App() {
             <Route
               path="/shifts/create"
               element={
-                <PrivateRoute allowedRoles={["PLANNER"]}>
+                <PrivateRoute allowedRoles={["PLANNER", "ADMIN"]}>
                   <ShiftCreatePage />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/shifts/edit/:shiftId"
+              element={
+                <PrivateRoute allowedRoles={["PLANNER", "ADMIN"]}>
+                  <ShiftEditPage />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/schedule"
+              element={
+                <PrivateRoute>
+                  <SchedulePage />
                 </PrivateRoute>
               }
             />
