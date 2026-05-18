@@ -2,22 +2,25 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
-import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table'
+import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table';
 import { useState } from "react";
 import { Alert, Button, Spinner } from "react-bootstrap";
-import { updateTabContent } from "../../services/handbook.js";
+import { updateTabContent, deleteTab } from "../../services/handbook.js";
 import HandbookToolbar from "./HandbookToolbar.jsx";
 
-function HandbookEditor({ tab, onSaved }) {
+function HandbookEditor({ tab, onSaved, onTabDeleted }) {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
     const [isDirty, setIsDirty] = useState(false);
 
     const editor = useEditor({
         extensions: [
-            StarterKit,
+            StarterKit.configure({
+                link: false,
+                underline: false,
+            }),
             Underline,
-            Link.configure({ openOnClick: false }),
+            Link.configure({ openOnClick: true }),
             Table.configure({ resizable: true }),
             TableRow,
             TableHeader,
@@ -32,14 +35,20 @@ function HandbookEditor({ tab, onSaved }) {
         setError(null);
         try {
             const html = editor.getHTML();
-            await updateTabContent(tab.id, html);
+            const updatedTab = await updateTabContent(tab.id, html);
             setIsDirty(false);
-            onSaved?.();
+            onSaved?.(updatedTab);
         } catch {
             setError("Could not save content. Please try again.");
         } finally {
             setSaving(false);
         }
+    };
+
+    const handleDelete = async () => {
+        if (!confirm(`Slet fanen "${tab.title}"?`)) return;
+        await deleteTab(tab.id);
+        onTabDeleted?.(tab.id);
     };
 
     return (
@@ -56,7 +65,13 @@ function HandbookEditor({ tab, onSaved }) {
             )}
             <HandbookToolbar editor={editor} />
             <EditorContent editor={editor} className="border rounded p-3 mt-2" />
-            <div className="d-flex justify-content-end mt-2">
+            <div className="d-flex justify-content-between mt-2">
+                <Button
+                    variant="outline-danger"
+                    onClick={handleDelete}
+                >
+                    Slet fane
+                </Button>
                 <Button
                     variant="primary"
                     onClick={handleSave}

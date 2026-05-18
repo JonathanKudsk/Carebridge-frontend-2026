@@ -1,16 +1,23 @@
 import { Nav, Alert } from "react-bootstrap";
+import { createTab } from "../../services/handbook.js";
 
-// Filters out tabs the user does not have access to before rendering
-function HandbookTabs({ tabs, activeTab, onSelectTab, userRole }) {
-    const accessibleTabs = tabs.filter(tab => tab.requiredRole === userRole || userRole === "ADMIN");
+function HandbookTabs({ tabs, activeTab, onSelectTab, userRole, handbookId, onTabCreated }) {
+    const isAdmin = userRole === "ADMIN";
 
-    if (accessibleTabs.length === 0) return (
+    const handleNewTab = async () => {
+        const title = prompt("Fanens navn:");
+        if (!title || title.trim() === "") return;
+        const newTab = await createTab(handbookId, title.trim());
+        onTabCreated(newTab);
+    };
+
+    if (tabs.length === 0 && !isAdmin) return (
         <Alert variant="warning">You do not have access to any tabs.</Alert>
     );
 
     return (
         <Nav variant="tabs" className="mb-3">
-            {accessibleTabs.map(tab => (
+            {tabs.map(tab => (
                 <Nav.Item key={tab.id}>
                     <Nav.Link
                         active={activeTab?.id === tab.id}
@@ -20,6 +27,11 @@ function HandbookTabs({ tabs, activeTab, onSelectTab, userRole }) {
                     </Nav.Link>
                 </Nav.Item>
             ))}
+            {isAdmin && (
+                <Nav.Item>
+                    <Nav.Link onClick={handleNewTab}>+</Nav.Link>
+                </Nav.Item>
+            )}
         </Nav>
     );
 }
