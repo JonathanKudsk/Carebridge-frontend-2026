@@ -21,7 +21,7 @@ import MedicationPage from "./pages/MedicationPage.jsx";
 import MessagePage from "./pages/(worker)/MessagePage.jsx";
 import Admin from "./pages/Admin.jsx";
 import MedicationChartPage from "./pages/MedicationChartPage";
-import ChatDock from "./components/Chat/ChatDock.jsx";
+import ChatDock from "./components/Chat/ChatPopup/ChatDock.jsx";
 
 import {
   getToken,

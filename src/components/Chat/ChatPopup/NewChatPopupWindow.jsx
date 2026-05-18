@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Button, ListGroup, Alert } from "react-bootstrap";
-import { getUsers } from "../../api/api";
-import { createChat } from "../../services/chats";
-import { getCurrentUser } from "../../services/auth";
+import { getUsers } from "../../../api/api.js";
+import { createChat } from "../../../services/chats.js";
+import { getCurrentUser } from "../../../services/auth.js";
 import ChatPopupWindow from "./ChatPopupWindow.jsx";
 
 const EMPLOYEE_ROLES = new Set(["ADMIN", "CAREWORKER", "PLANNER"]);

@@ -4,13 +4,13 @@ import { useNavigate } from "react-router-dom";
 import ChatLauncher from "./ChatLauncher.jsx";
 import ChatBubble from "./ChatBubble.jsx";
 import ChatPopupWindow from "./ChatPopupWindow.jsx";
-import ChatWindow from "./ChatWindow.jsx";
-import ChatRooms from "./ChatRooms.jsx";
+import ChatWindow from "../ChatWindow.jsx";
+import ChatRooms from "../ChatRooms.jsx";
 import NewChatPopupWindow from "./NewChatPopupWindow.jsx";
-import { getUsers } from "../../api/api";
-import { getCurrentUser } from "../../services/auth";
-import { listChatRooms } from "../../services/chats";
-import { getMessages } from "../../services/messages";
+import { getUsers } from "../../../api/api.js";
+import { getCurrentUser } from "../../../services/auth.js";
+import { listChatRooms } from "../../../services/chats.js";
+import { getMessages } from "../../../services/messages.js";
 
 const MAX_MINIMIZED = 3;
 
