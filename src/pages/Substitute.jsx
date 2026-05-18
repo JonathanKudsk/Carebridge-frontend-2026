@@ -154,7 +154,7 @@ export default function Substitute() {
 
   const fetchDepartments = useCallback(() => {
     api
-      .get("/departments")
+      .get("/locations")
       .then((response) => response.data)
       .then((data) => setDepartments(data))
       .catch((error) => {
@@ -209,7 +209,7 @@ export default function Substitute() {
           ))}
           {testDepartments.map((department) => (
             <option key={department.id} value={department.id}>
-              {department.name}
+              {department.location_name} (Test)
             </option>
           ))}
         </select>
