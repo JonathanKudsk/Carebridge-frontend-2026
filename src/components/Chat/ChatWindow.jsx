@@ -99,6 +99,9 @@ export default function ChatWindow({ chatRoom, users = [], onLastMessage }) {
         }
     }
 
+    const isInactive = chatRoom?.active === false;
+    const isDisabled = sending || !isEmployed || isInactive;
+
     return (
         <div className={styles.container}>
             <div className={styles.messages}>
@@ -111,15 +114,7 @@ export default function ChatWindow({ chatRoom, users = [], onLastMessage }) {
                             className={`${styles.messageWrapper} ${isOwn ? styles.messageWrapperOwn : styles.messageWrapperOther}`}
                         >
                             <div
-                                className={`${styles.bubble} ${isOwn ? styles.bubbleOwn : styles.bubbleOther}`}
-                              className={`p-2 rounded ${
-                                    chatRoom?.active === false
-                                    ? "bg-secondary"
-                                    : (isOwn ? "bg-primary text-white" : "bg-light border text-dark")
-                                }`}
-                                style={{ 
-                                    maxWidth: "70%"          
-                                }}
+                               className={`${styles.bubble} ${isOwn ? styles.bubbleOwn : styles.bubbleOther} ${isInactive ? styles.bubbleInactive : ""}`}
                             >
                                 {!isOwn && (
                                     <div className={styles.senderName}>
@@ -161,8 +156,11 @@ export default function ChatWindow({ chatRoom, users = [], onLastMessage }) {
                         {messageError}
                     </Form.Control.Feedback>
                 )}
-                <Button className={styles.sendButton} type="submit" 
-                        disabled={sending || !text.trim() || !!messageError}>
+                <Button 
+                    className={`${styles.sendButton} ${isDisabled ? styles.sendButtonDisabled : ""}`}
+                    type="submit" 
+                    disabled={isDisabled}
+                >
                     {sending ? <Spinner animation="border" size="sm" /> : "Send"}
                 </Button>
             </Form>

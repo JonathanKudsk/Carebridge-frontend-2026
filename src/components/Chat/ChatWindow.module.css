@@ -19,6 +19,13 @@
     border-radius: 16px 16px 16px 4px;
 }
 
+.bubbleInactive {
+    background-color: #6b7a8d !important;
+    color: #dce8f5 !important;
+    border-color: #6b7a8d !important;
+    opacity: 0.7;
+}
+
 .senderName {
     font-size: 11px;
     color: #7a95ad;
@@ -79,9 +86,10 @@
     background-color: #185fa5 !important;
 }
 
-.sendButton:disabled {
-    background-color: #a0b4c8;
-    cursor: not-allowed;
+.sendButtonDisabled {
+    background-color: #6b7a8d !important;
+    border-color: #6b7a8d !important;
+    cursor: not-allowed !important;
 }
 
 .container {

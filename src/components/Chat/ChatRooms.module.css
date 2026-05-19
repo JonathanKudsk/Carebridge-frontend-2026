@@ -50,7 +50,9 @@
     color: var(--text-main) !important;
 
     display: flex !important;
-    align-items: center;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
     min-width: 0;
 
     cursor: pointer;
