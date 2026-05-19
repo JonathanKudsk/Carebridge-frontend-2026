@@ -23,6 +23,7 @@ import MedicationPage from "./pages/MedicationPage.jsx";
 import MessagePage from "./pages/(worker)/MessagePage.jsx";
 import Admin from "./pages/Admin.jsx";
 import MedicationChartPage from "./pages/MedicationChartPage";
+import ChatDock from "./components/Chat/ChatPopup/ChatDock.jsx";
 import HandbookPage from "./pages/HandbookPage.jsx";
 
 import {
@@ -195,7 +196,7 @@ export default function App() {
         onExpired={() => handleLogout()}
       />
 
-      {/* Routes */}
+            {/* Routes */}
       <SnackProvider>
         <Container className="mt-4">
           <Routes>
@@ -203,10 +204,10 @@ export default function App() {
               path="/"
               element={
                 token ? (
-                  <Home /> // Hvis logget ind (token er sandt), vis Home-komponenten
+                  <Home />
                 ) : (
                   <Navigate to="/login" replace />
-                ) // Hvis ikke logget ind, omdiriger til /login
+                )
               }
             />
 
@@ -248,8 +249,6 @@ export default function App() {
               path="/create-resident"
               element={
                 <PrivateRoute allowedRoles={["ADMIN"]}>
-                  {" "}
-                  {/* <-- Tjekker for Admin */}
                   <CreateResidentPage />
                 </PrivateRoute>
               }
@@ -288,7 +287,6 @@ export default function App() {
               }
             />
 
-            {/* Journal Pages */}
             <Route
               path="/residents/:id/create-journal"
               element={
@@ -349,6 +347,8 @@ export default function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Container>
+
+        {token && <ChatDock visible={Boolean(token)} />}
       </SnackProvider>
     </>
   );
