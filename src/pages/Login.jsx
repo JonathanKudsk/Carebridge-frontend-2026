@@ -28,6 +28,8 @@ export default function Login() {
         setStep("setup");
       } else if (data.requires2FA) {
         setStep("verify");
+      } else if (data.token) {
+        navigate("/", { replace: true });
       }
     } catch (ex) {
       setErr(ex?.response?.data?.msg || ex?.message || "Login failed");
