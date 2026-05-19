@@ -42,6 +42,20 @@ export async function updateShift(id, payload) {
   const res = await api.put(`/shifts/${id}`, payload);
   return res.data;
 }
+
+export async function deleteShift(id) {
+  const res = await api.delete(`/shifts/${id}`, {
+    headers: {
+      Accept: "application/toon",
+    },
+    responseType: "text",
+    transformResponse: [(data) => data],
+  });
+
+  if (!res.data) return null;
+  return ToonObjectMapper.parse(res.data);
+}
+
 export async function getSchedule(periodId) {
   const res = await api.get("/shifts/", {
     params: { periodId },

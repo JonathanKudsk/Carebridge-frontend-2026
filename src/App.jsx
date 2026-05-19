@@ -24,6 +24,7 @@ import MessagePage from "./pages/(worker)/MessagePage.jsx";
 import Admin from "./pages/Admin.jsx";
 import MedicationChartPage from "./pages/MedicationChartPage";
 import ChatDock from "./components/Chat/ChatPopup/ChatDock.jsx";
+import HandbookPage from "./pages/HandbookPage.jsx";
 
 import {
   getToken,
@@ -117,6 +118,10 @@ export default function App() {
                 Calendar
               </Nav.Link>
 
+              <Nav.Link as={Link} to="/handbook">
+                Håndbog
+              </Nav.Link>
+
               <Nav.Link as={Link} to="/schedule">
                 Vagtplan
               </Nav.Link>
@@ -203,6 +208,15 @@ export default function App() {
                 ) : (
                   <Navigate to="/login" replace />
                 )
+              }
+            />
+
+            <Route
+              path="/handbook"
+              element={
+                <PrivateRoute>
+                  <HandbookPage />
+                </PrivateRoute>
               }
             />
 
