@@ -39,6 +39,7 @@ function saveSession(data, emailFallback) {
         email: data.email,
         role: data.role,
         name: data.name || (emailFallback ?? data.email).split("@")[0],
+        isEmployed: data.isEmployed ?? true,
       })
     );
   }
@@ -101,6 +102,7 @@ function storeFullSession(data) {
       email: data.email,
       role: data.role,
       name: data.name,
+      isEmployed: data.isEmployed ?? true,
     }),
   );
   notifyAuthChanged();
