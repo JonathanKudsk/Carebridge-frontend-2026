@@ -20,6 +20,7 @@ import ShiftCreatePage from "./pages/ShiftCreatePage.jsx";
 import MedicationPage from "./pages/MedicationPage.jsx";
 import MessagePage from "./pages/(worker)/MessagePage.jsx";
 import Admin from "./pages/Admin.jsx";
+import CreateBudgetPage from "./pages/CreateBudgetPage";
 import MedicationChartPage from "./pages/MedicationChartPage";
 import SavingsGoalsPage from "./pages/SavingsGoalsPage";
 
@@ -313,6 +314,14 @@ export default function App() {
                 </PrivateRoute>
               }
             />
+              <Route
+                  path="/residents/:id/create-budget"
+                  element={
+                      <PrivateRoute>
+                          <CreateBudgetPage />
+                      </PrivateRoute>
+                  }
+              />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

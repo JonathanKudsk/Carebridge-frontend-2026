@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Card, Button, Stack, Spinner, Alert, Accordion } from "react-bootstrap";
 import { getResidentById, deactivateResident, getJournalEntries } from "../api/api.js";
+import api from "../services/api";
 
 const formatDateTime = (arr) => {
   if (!arr) return "";
@@ -12,7 +13,7 @@ const formatDateTime = (arr) => {
 export default function ResidentDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
   const [resident, setResident] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,6 +22,29 @@ export default function ResidentDetailsPage() {
   const [entries, setEntries] = useState([]);
   const [entriesLoading, setEntriesLoading] = useState(false);
   const [entriesError, setEntriesError] = useState(null);
+  const [budget, setBudget] = useState(null);
+
+    useEffect(() => {
+
+        async function fetchBudget() {
+
+            try {
+
+                const response =
+                    await api.get(
+                        `/budgets/resident/${id}`
+                    );
+
+                setBudget(response.data);
+
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
+        fetchBudget();
+
+    }, [id]);
 
   useEffect(() => {
     async function fetchResident() {
@@ -38,6 +62,7 @@ export default function ResidentDetailsPage() {
     }
     fetchResident();
   }, [id]);
+
 
   useEffect(() => {
     if (!resident?.journalId) return;
@@ -61,7 +86,7 @@ export default function ResidentDetailsPage() {
     if (window.confirm(`Er du sikker på, at du vil deaktivere denne Beboer ${resident.firstName}?`)) {
       try {
         await deactivateResident(id);
-        navigate("/resident-overview"); 
+        navigate("/resident-overview");
       } catch (err) {
         console.error(err);
         setError("Noget gik galt");
@@ -90,9 +115,9 @@ export default function ResidentDetailsPage() {
 
   return (
     <Container className="mt-4">
-      <Button 
-        variant="link" 
-        onClick={() => navigate("/resident-overview")} 
+      <Button
+        variant="link"
+        onClick={() => navigate("/resident-overview")}
         className="mb-3 p-0 text-decoration-none"
       >
         &larr; Tilbage til oversigt
@@ -110,14 +135,14 @@ export default function ResidentDetailsPage() {
 
           <Stack gap={2} className="mb-4">
             <div className="d-flex align-items-center">
-              <strong>CPR nummer:</strong> 
+              <strong>CPR nummer:</strong>
               <span className="ms-2 me-3">{showCpr ? resident.cprNr : "******-****"}</span>
               <Button size="sm" variant="outline-primary" onClick={() => setShowCpr(!showCpr)}>
                 {showCpr ? "Skjul" : "Vis"}
               </Button>
             </div>
             <div>
-              <strong>Associated Journal ID:</strong> 
+              <strong>Associated Journal ID:</strong>
               <span className="ms-2">{resident.journalId || "Ingen Journal Id fundet"}</span>
             </div>
           </Stack>
@@ -149,11 +174,73 @@ export default function ResidentDetailsPage() {
             >
               Deaktiver Beboer
             </Button>
+              <Button
+                  variant="success"
+                  onClick={() =>
+                      navigate(`/residents/${id}/create-budget`)
+                  }
+              >
+                  Opret Budget
+              </Button>
           </Stack>
         </Card.Body>
       </Card>
 
-      {resident.journalId && (
+        {budget && (
+
+            <Card className="shadow-sm mt-4">
+
+                <Card.Header
+                    as="h5"
+                    className="bg-success text-white"
+                >
+                    Budget
+                </Card.Header>
+
+                <Card.Body>
+
+                    <p>
+                        <strong>Income:</strong>
+                        {" "}
+                        {budget.income}
+                    </p>
+
+                    <p>
+                        <strong>Fixed Expenses:</strong>
+                        {" "}
+                        {budget.fixedExpenses}
+                    </p>
+
+                    <p>
+                        <strong>Variable Expenses:</strong>
+                        {" "}
+                        {budget.variableExpenses}
+                    </p>
+
+                    <p>
+                        <strong>Pocket Money:</strong>
+                        {" "}
+                        {budget.pocketMoneyAmount}
+                    </p>
+
+                    <p>
+                        <strong>Savings:</strong>
+                        {" "}
+                        {budget.savingsAmount}
+                    </p>
+
+                    <p>
+                        <strong>Notes:</strong>
+                        {" "}
+                        {budget.notes || "No notes"}
+                    </p>
+
+                </Card.Body>
+
+            </Card>
+        )}
+
+        {resident.journalId && (
         <Card className="shadow-sm mt-4">
           <Card.Header as="h5" className="bg-primary text-white">
             Journal entries
