@@ -1,9 +1,20 @@
 import { useState, useEffect } from "react";
-import { getShift, updateShift, getPlanPeriod, getCareWorkers, createShiftAssignment } from "../services/shifts.js";
-import { useParams } from "react-router-dom";
+import { Button, Modal } from "react-bootstrap";
+import {
+  getShift,
+  updateShift,
+  deleteShift,
+  getPlanPeriod,
+  getCareWorkers,
+  createShiftAssignment,
+} from "../services/shifts.js";
+import { useNavigate, useParams } from "react-router-dom";
+import { useSnack } from "../hooks/useSnack.js";
 
 export default function ShiftEditPage() {
+  const navigate = useNavigate();
   const { shiftId } = useParams();
+  const { createSnack } = useSnack();
   const [planPeriodId, setPlanPeriodId] = useState("");
   const [locationId, setLocationId] = useState("");
   const [shiftType, setShiftType] = useState("DAY");
@@ -15,11 +26,12 @@ export default function ShiftEditPage() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [loadingShift, setLoadingShift] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [errors, setErrors] = useState({});
   const [successMsg, setSuccessMsg] = useState("");
 
-  // Load existing shift data to pre-fill form
   useEffect(() => {
     async function fetchShift() {
       try {
@@ -29,7 +41,9 @@ export default function ShiftEditPage() {
         setShiftType(shift.shiftType || "DAY");
         setStartTime(shift.startShift ? shift.startShift.slice(0, 16) : "");
         setEndTime(shift.endShift ? shift.endShift.slice(0, 16) : "");
-        setSelectedUserId(shift.assignedUserId ? String(shift.assignedUserId) : "");
+        setSelectedUserId(
+          shift.assignedUserId ? String(shift.assignedUserId) : "",
+        );
       } catch (err) {
         console.error("Kunne ikke hente vagt:", err);
       } finally {
@@ -39,7 +53,6 @@ export default function ShiftEditPage() {
     fetchShift();
   }, [shiftId]);
 
-  // Load care workers for dropdown
   useEffect(() => {
     async function fetchCareWorkers() {
       setLoadingUsers(true);
@@ -82,7 +95,6 @@ export default function ShiftEditPage() {
     setSubmitting(true);
 
     try {
-      // Validate shift is within plan period
       const pp = await getPlanPeriod(planPeriodId);
       const ppStart = pp?.startDate || pp?.start_date;
       const ppEnd = pp?.endDate || pp?.end_date;
@@ -105,7 +117,6 @@ export default function ShiftEditPage() {
         return;
       }
 
-      // Update the shift
       await updateShift(shiftId, {
         planPeriodId: Number(planPeriodId),
         locationId: Number(locationId),
@@ -115,14 +126,12 @@ export default function ShiftEditPage() {
         assignedUserId: selectedUserId ? Number(selectedUserId) : null,
       });
 
-      // Assign employee if selected
       if (selectedUserId) {
         await createShiftAssignment(shiftId, Number(selectedUserId));
       }
 
       setErrors({});
       setSuccessMsg("Vagt opdateret.");
-
     } catch (err) {
       const msg =
         err?.response?.data?.msg ||
@@ -131,7 +140,10 @@ export default function ShiftEditPage() {
         "Kunne ikke opdatere vagt.";
 
       if (String(msg).toLowerCase().includes("overlap")) {
-        setErrors({ selectedUserId: "Medarbejderen er allerede planlagt i dette tidsrum." });
+        setErrors({
+          selectedUserId:
+            "Medarbejderen er allerede planlagt i dette tidsrum.",
+        });
       } else if (String(msg).toLowerCase().includes("planperiode")) {
         setErrors({
           startTime: "Vagten skal ligge inden for planperioden.",
@@ -142,6 +154,30 @@ export default function ShiftEditPage() {
       }
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+
+    try {
+      await deleteShift(shiftId);
+      setShowDeleteModal(false);
+      createSnack("Vagten blev slettet.", "success");
+      navigate("/schedule");
+    } catch (err) {
+      const message =
+        err?.response?.status === 404
+          ? "Vagten findes ikke længere"
+          : err?.response?.data?.msg ||
+            err?.response?.data?.message ||
+            err?.message ||
+            "Kunne ikke slette vagten.";
+
+      setShowDeleteModal(false);
+      createSnack(message, "error");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -164,7 +200,9 @@ export default function ShiftEditPage() {
               onChange={(e) => setPlanPeriodId(e.target.value)}
             />
           </label>
-          {errors.planPeriodId && <div style={{ color: "red" }}>{errors.planPeriodId}</div>}
+          {errors.planPeriodId && (
+            <div style={{ color: "red" }}>{errors.planPeriodId}</div>
+          )}
         </p>
 
         <p>
@@ -176,21 +214,28 @@ export default function ShiftEditPage() {
               onChange={(e) => setLocationId(e.target.value)}
             />
           </label>
-          {errors.locationId && <div style={{ color: "red" }}>{errors.locationId}</div>}
+          {errors.locationId && (
+            <div style={{ color: "red" }}>{errors.locationId}</div>
+          )}
         </p>
 
         <p>
           <label>
             Vagttype:
             <br />
-            <select value={shiftType} onChange={(e) => setShiftType(e.target.value)}>
+            <select
+              value={shiftType}
+              onChange={(e) => setShiftType(e.target.value)}
+            >
               <option value="DAY">DAY</option>
               <option value="EVENING">EVENING</option>
               <option value="NIGHT">NIGHT</option>
               <option value="ON_CALL">ON_CALL</option>
             </select>
           </label>
-          {errors.shiftType && <div style={{ color: "red" }}>{errors.shiftType}</div>}
+          {errors.shiftType && (
+            <div style={{ color: "red" }}>{errors.shiftType}</div>
+          )}
         </p>
 
         <p>
@@ -203,7 +248,9 @@ export default function ShiftEditPage() {
               onChange={(e) => setStartTime(e.target.value)}
             />
           </label>
-          {errors.startTime && <div style={{ color: "red" }}>{errors.startTime}</div>}
+          {errors.startTime && (
+            <div style={{ color: "red" }}>{errors.startTime}</div>
+          )}
         </p>
 
         <p>
@@ -216,7 +263,9 @@ export default function ShiftEditPage() {
               onChange={(e) => setEndTime(e.target.value)}
             />
           </label>
-          {errors.endTime && <div style={{ color: "red" }}>{errors.endTime}</div>}
+          {errors.endTime && (
+            <div style={{ color: "red" }}>{errors.endTime}</div>
+          )}
         </p>
 
         <p>
@@ -239,13 +288,44 @@ export default function ShiftEditPage() {
               </select>
             )}
           </label>
-          {errors.selectedUserId && <div style={{ color: "red" }}>{errors.selectedUserId}</div>}
+          {errors.selectedUserId && (
+            <div style={{ color: "red" }}>{errors.selectedUserId}</div>
+          )}
         </p>
 
-        <button type="submit" disabled={submitting}>
+        <button type="submit" disabled={submitting || deleting}>
           {submitting ? "Gemmer..." : "Gem ændringer"}
         </button>
       </form>
+
+      <div style={{ marginTop: "1rem" }}>
+        <Button
+          variant="danger"
+          onClick={() => setShowDeleteModal(true)}
+          disabled={submitting || deleting}
+        >
+          Slet vagt
+        </Button>
+      </div>
+
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Bekræft sletning</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Er du sikker på at du vil slette denne vagt?</Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowDeleteModal(false)}
+            disabled={deleting}
+          >
+            Annuller
+          </Button>
+          <Button variant="danger" onClick={handleDelete} disabled={deleting}>
+            {deleting ? "Sletter..." : "Bekræft"}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

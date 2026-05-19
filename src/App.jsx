@@ -23,6 +23,8 @@ import MedicationPage from "./pages/MedicationPage.jsx";
 import MessagePage from "./pages/(worker)/MessagePage.jsx";
 import Admin from "./pages/Admin.jsx";
 import MedicationChartPage from "./pages/MedicationChartPage";
+import ChatDock from "./components/Chat/ChatPopup/ChatDock.jsx";
+import HandbookPage from "./pages/HandbookPage.jsx";
 
 import {
   getToken,
@@ -116,6 +118,10 @@ export default function App() {
                 Calendar
               </Nav.Link>
 
+              <Nav.Link as={Link} to="/handbook">
+                Håndbog
+              </Nav.Link>
+
               <Nav.Link as={Link} to="/schedule">
                 Vagtplan
               </Nav.Link>
@@ -124,10 +130,10 @@ export default function App() {
                 Resident Overview
               </Nav.Link>
 
-              {/* TODO: Skal diskuteres med gruppen om det skal være en ting */}
-              {/* <Nav.Link as={Link} to="/journal-overview">
+
+              {<Nav.Link as={Link} to="/journal-overview">
                 Journal Oversigt
-              </Nav.Link> */}
+              </Nav.Link>}
 
               <Nav.Link as={Link} to="/medication-chart/1">
                 Medication Chart
@@ -190,7 +196,7 @@ export default function App() {
         onExpired={() => handleLogout()}
       />
 
-      {/* Routes */}
+            {/* Routes */}
       <SnackProvider>
         <Container className="mt-4">
           <Routes>
@@ -198,10 +204,19 @@ export default function App() {
               path="/"
               element={
                 token ? (
-                  <Home /> // Hvis logget ind (token er sandt), vis Home-komponenten
+                  <Home />
                 ) : (
                   <Navigate to="/login" replace />
-                ) // Hvis ikke logget ind, omdiriger til /login
+                )
+              }
+            />
+
+            <Route
+              path="/handbook"
+              element={
+                <PrivateRoute>
+                  <HandbookPage />
+                </PrivateRoute>
               }
             />
 
@@ -234,8 +249,6 @@ export default function App() {
               path="/create-resident"
               element={
                 <PrivateRoute allowedRoles={["ADMIN"]}>
-                  {" "}
-                  {/* <-- Tjekker for Admin */}
                   <CreateResidentPage />
                 </PrivateRoute>
               }
@@ -274,7 +287,6 @@ export default function App() {
               }
             />
 
-            {/* Journal Pages */}
             <Route
               path="/residents/:id/create-journal"
               element={
@@ -283,11 +295,10 @@ export default function App() {
                 </PrivateRoute>
               }
             />
-            {/* TODO: Skal diskuteres med gruppen om det skal være en ting */}
-            {/* <Route
+            {<Route
               path="/journal-overview"
               element={<JournalOverviewPage journals={journals} />}
-            /> */}
+            />}
             <Route
               path="/journal/:journalId"
               element={<ShowJournalDetails journals={journals} />}
@@ -336,6 +347,8 @@ export default function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Container>
+
+        {token && <ChatDock visible={Boolean(token)} />}
       </SnackProvider>
     </>
   );

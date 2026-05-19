@@ -1,7 +1,19 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Container, Card, Button, Stack, Spinner, Alert, Accordion } from "react-bootstrap";
-import { getResidentById, deactivateResident, getJournalEntries } from "../api/api.js";
+import {
+  Container,
+  Card,
+  Button,
+  Stack,
+  Spinner,
+  Alert,
+  Accordion,
+} from "react-bootstrap";
+import {
+  getResidentById,
+  deactivateResident,
+  getJournalEntries,
+} from "../api/api.js";
 
 const formatDateTime = (arr) => {
   if (!arr) return "";
@@ -12,7 +24,7 @@ const formatDateTime = (arr) => {
 export default function ResidentDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
   const [resident, setResident] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -58,15 +70,33 @@ export default function ResidentDetailsPage() {
   }, [resident?.journalId]);
 
   const handleDeactivate = async () => {
-    if (window.confirm(`Er du sikker på, at du vil deaktivere denne Beboer ${resident.firstName}?`)) {
+    if (
+      window.confirm(
+        `Er du sikker på, at du vil deaktivere denne Beboer ${resident.firstName}?`,
+      )
+    ) {
       try {
         await deactivateResident(id);
-        navigate("/resident-overview"); 
+        navigate("/resident-overview");
       } catch (err) {
         console.error(err);
         setError("Noget gik galt");
       }
     }
+  };
+
+  const formatDate = (timestamp) => {
+    if (!timestamp) return "Ingen dato";
+
+    const date = new Date(timestamp * 1000);
+
+    return date.toLocaleDateString("da-DK", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   if (loading) {
@@ -81,7 +111,9 @@ export default function ResidentDetailsPage() {
     return (
       <Container className="mt-5">
         <Alert variant="danger">{error}</Alert>
-        <Button onClick={() => navigate("/resident-overview")}>Tilbage til oversigt</Button>
+        <Button onClick={() => navigate("/resident-overview")}>
+          Tilbage til oversigt
+        </Button>
       </Container>
     );
   }
@@ -90,9 +122,9 @@ export default function ResidentDetailsPage() {
 
   return (
     <Container className="mt-4">
-      <Button 
-        variant="link" 
-        onClick={() => navigate("/resident-overview")} 
+      <Button
+        variant="link"
+        onClick={() => navigate("/resident-overview")}
         className="mb-3 p-0 text-decoration-none"
       >
         &larr; Tilbage til oversigt
@@ -100,30 +132,136 @@ export default function ResidentDetailsPage() {
 
       <Card className="shadow-sm">
         <Card.Header as="h5" className="bg-primary text-white">
-          Resident Profil
+          Beboer Profil
         </Card.Header>
         <Card.Body>
           <div className="mb-4">
-            <h2 className="mb-1">{resident.firstName} {resident.lastName}</h2>
-            <p className="text-muted">ID: {resident.id}</p>
+            <div className="d-flex justify-content-between align-items-start">
+              <div>
+                <h2 className="mb-1">
+                  {resident.firstName} {resident.lastName}
+                </h2>
+                <p className="text-muted">Beboer ID: {resident.id}</p>
+                <p className="text-muted">Bruger ID: {resident.userId}</p>
+              </div>
+              <span
+                className={`badge ${resident.active ? "bg-success" : "bg-danger"}`}
+              >
+                {resident.active ? "Aktiv" : "Deaktiveret"}
+              </span>
+            </div>
           </div>
 
           <Stack gap={2} className="mb-4">
             <div className="d-flex align-items-center">
-              <strong>CPR nummer:</strong> 
-              <span className="ms-2 me-3">{showCpr ? resident.cprNr : "******-****"}</span>
-              <Button size="sm" variant="outline-primary" onClick={() => setShowCpr(!showCpr)}>
+              <strong>CPR nummer:</strong>
+              <span className="ms-2 me-3">
+                {showCpr ? resident.cprNr : "******-****"}
+              </span>
+              <Button
+                size="sm"
+                variant="outline-primary"
+                onClick={() => setShowCpr(!showCpr)}
+              >
                 {showCpr ? "Skjul" : "Vis"}
               </Button>
             </div>
             <div>
-              <strong>Associated Journal ID:</strong> 
-              <span className="ms-2">{resident.journalId || "Ingen Journal Id fundet"}</span>
+              <strong>Alder:</strong>{" "}
+              <span className="ms-2">{resident.age || "Ikke oplyst"} </span>
+            </div>
+            <div>
+              <strong>Køn:</strong>{" "}
+              <span className="ms-2">{resident.gender || "Ikke oplyst"}</span>
+            </div>
+            <div>
+              <strong>Tilknyttet Journal:</strong>
+              <span className="ms-2">
+                {resident.journalId
+                  ? `${resident.journalId}`
+                  : "Ingen Journal fundet"}
+              </span>
+            </div>
+            <div>
+              <strong>Medicin ID:</strong>
+              <span className="ms-2">
+                {resident.medicationChartId
+                  ? `${resident.medicationChartId}`
+                  : "Intet medicinkort tilknyttet"}
+              </span>
             </div>
           </Stack>
 
           <hr />
 
+          <h6 className="text-primary mb-3">Kontaktoplysninger</h6>
+          <Stack gap={2}>
+            <div>
+              <strong>Email:</strong>{" "}
+              <span className="ms-2">
+                {resident.displayEmail || "Ingen kontakt-email"}
+              </span>
+            </div>
+            <div>
+              <strong>Telefon:</strong>{" "}
+              <span className="ms-2">
+                {resident.displayPhone || "Ikke oplyst"}
+              </span>
+            </div>
+
+            <div className="mt-3 p-2 bg rounded shadow-sm border">
+              <div className="text-muted" style={{ fontSize: "0.8rem" }}>
+                <div>
+                  <strong>Oprettet i systemet:</strong>{" "}
+                  {resident.createdAt
+                    ? formatDate(resident.createdAt)
+                    : "Ukendt"}
+                </div>
+                <div>
+                  <strong>Sidst opdateret:</strong>{" "}
+                  {resident.updatedAt
+                    ? formatDate(resident.updatedAt)
+                    : "Aldrig opdateret"}
+                </div>
+              </div>
+            </div>
+          </Stack>
+          <hr />
+
+          <h6 className="text-primary mb-3">Pårørende / Værger</h6>
+          {resident.guardians && resident.guardians.length > 0 ? (
+            <Stack gap={3} className="mb-4">
+              {resident.guardians.map((guardian, index) => (
+                <div key={guardian.id}>
+                  <div className="fw-bold text-white small mb-2 border-bottom pb-1">
+                    Pårørende {index + 1}:{" "}
+                    {guardian.displayName || guardian.name ||"Intet navn angivet"}
+                  </div>
+
+                  <Stack gap={2}>
+                    <div>
+                      <strong>Telefon:</strong>{" "}
+                      <span className="ms-2">
+                        {guardian.displayPhone || "Intet telefonnummer"}
+                      </span>
+                    </div>
+                    <div>
+                      <strong>Email:</strong>{" "}
+                      <span className="ms-2">
+                        {guardian.displayEmail || "Ingen e-mail oplyst"}
+                      </span>
+                    </div>
+                  </Stack>
+                </div>
+              ))}
+            </Stack>
+          ) : (
+            <p className="text-muted small italic mb-4">
+              Ingen pårørende registreret på denne beboer.
+            </p>
+          )}
+
+          <hr />
           <Stack direction="horizontal" gap={3} className="justify-content-end">
             <Button
               variant="primary"
@@ -137,12 +275,11 @@ export default function ResidentDetailsPage() {
             >
               Rediger Information
             </Button>
-            <Button
-              variant="danger"
-              onClick={handleDeactivate}
-            >
-              Deaktiver Beboer
-            </Button>
+            {resident.active && (
+              <Button variant="danger" onClick={handleDeactivate}>
+                Deaktiver Beboer
+              </Button>
+            )}
           </Stack>
         </Card.Body>
       </Card>
@@ -166,18 +303,35 @@ export default function ResidentDetailsPage() {
                       <div className="d-flex flex-column">
                         <strong>{entry.title}</strong>
                         <small className="text-muted">
-                          {formatDateTime(entry.createdAt)} — {entry.entryType?.toLowerCase() || "—"}
+                          {formatDateTime(entry.createdAt)} —{" "}
+                          {entry.entryType?.toLowerCase() || "—"}
                         </small>
                       </div>
                     </Accordion.Header>
                     <Accordion.Body>
-                      <p><strong>Type:</strong> {entry.entryType?.toLowerCase() || "—"}</p>
-                      <p><strong>Risikoniveau:</strong> {entry.riskAssessment || "—"}</p>
-                      <p><strong>Forfatter:</strong> {entry.authorUserId || "Ukendt"}</p>
-                      <p><strong>Oprettet:</strong> {formatDateTime(entry.createdAt)}</p>
+                      <p>
+                        <strong>Type:</strong>{" "}
+                        {entry.entryType?.toLowerCase() || "—"}
+                      </p>
+                      <p>
+                        <strong>Risikoniveau:</strong>{" "}
+                        {entry.riskAssessment || "—"}
+                      </p>
+                      <p>
+                        <strong>Forfatter:</strong>{" "}
+                        {entry.authorUserId || "Ukendt"}
+                      </p>
+                      <p>
+                        <strong>Oprettet:</strong>{" "}
+                        {formatDateTime(entry.createdAt)}
+                      </p>
                       {formatDateTime(entry.updatedAt) &&
-                        formatDateTime(entry.updatedAt) !== formatDateTime(entry.createdAt) && (
-                          <p><strong>Opdateret:</strong> {formatDateTime(entry.updatedAt)}</p>
+                        formatDateTime(entry.updatedAt) !==
+                          formatDateTime(entry.createdAt) && (
+                          <p>
+                            <strong>Opdateret:</strong>{" "}
+                            {formatDateTime(entry.updatedAt)}
+                          </p>
                         )}
                       <hr />
                       <p style={{ whiteSpace: "pre-wrap" }}>{entry.content}</p>

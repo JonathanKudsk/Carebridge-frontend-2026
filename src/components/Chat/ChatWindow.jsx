@@ -12,6 +12,7 @@ export default function ChatWindow({ chatRoom, users = [], onLastMessage }) {
     const [loading, setLoading] = useState(false);
     const [sending, setSending] = useState(false);
     const currentUser = getCurrentUser();
+    const isEmployed = currentUser?.isEmployed ?? true;
     const [currentUserId, setCurrentUserId] = useState(currentUser?.id ?? null);
     const bottomRef = useRef(null);
     const [messageError, setMessageError] = useState("");
@@ -58,6 +59,7 @@ export default function ChatWindow({ chatRoom, users = [], onLastMessage }) {
         if (messages.length > 0) {
             onLastMessage?.(chatRoom.id, messages[messages.length - 1].message);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [messages]);
 
     const validateMessage = (message) => {
@@ -110,6 +112,14 @@ export default function ChatWindow({ chatRoom, users = [], onLastMessage }) {
                         >
                             <div
                                 className={`${styles.bubble} ${isOwn ? styles.bubbleOwn : styles.bubbleOther}`}
+                              className={`p-2 rounded ${
+                                    chatRoom?.active === false
+                                    ? "bg-secondary"
+                                    : (isOwn ? "bg-primary text-white" : "bg-light border text-dark")
+                                }`}
+                                style={{ 
+                                    maxWidth: "70%"          
+                                }}
                             >
                                 {!isOwn && (
                                     <div className={styles.senderName}>
@@ -142,8 +152,8 @@ export default function ChatWindow({ chatRoom, users = [], onLastMessage }) {
                         setText(e.target.value);
                         setMessageError("");
                     }}
-                    placeholder="Skriv en besked..."
-                    disabled={sending}
+                    placeholder={!isEmployed || chatRoom?.active === false ? "Du kan ikke sende beskeder længere" : "Skriv en besked..."}
+                    disabled={sending || !isEmployed || chatRoom?.active === false}
                     isInvalid={!!messageError}
                 />
                 {messageError && (

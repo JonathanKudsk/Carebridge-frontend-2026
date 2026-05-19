@@ -1,7 +1,8 @@
 import api from './api.js';
 
-export async function listChatRooms() {
-    const { data } = await api.get('/chatrooms')
+export async function listChatRooms({ page, size } = {}) {
+    const params = page !== undefined ? { page, size } : {};
+    const { data } = await api.get('/chatrooms', { params });
     return data;
 }
 
