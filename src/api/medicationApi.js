@@ -8,7 +8,8 @@ export async function getMedicationChartByResident(residentId) {
 export async function getMedication(chartId, medicationId) {
     const { data } = await api.get(`/medication-charts/${chartId}/medications/${medicationId}`);
     return data;
-  
+}
+
 export async function getMedicationChart(chartId) {
   const { data } = await api.get(`/medication-charts/${chartId}`);
   return data;
