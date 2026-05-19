@@ -1,13 +1,18 @@
 import { ListGroup, Container } from "react-bootstrap";
+import styles from "./ChatRooms.module.css";
 
 function ChatRooms({ chatRooms, onSelectRoom, activeChatRoomId }) {
     return (
-        <Container className="mt-3">
-            <ListGroup>
+        <Container className="mt-3" fluid className={styles.sidebar} >
+            <div className={styles.header}>
+                <h5 className={styles.title}>Chatrum</h5>
+            </div>
+            <ListGroup className={styles.roomList}>
                 {chatRooms.map((room) => (
                     <ListGroup.Item
                         key={room.id}
                         action
+                        className={`${styles.roomItem}`}
                         active={activeChatRoomId === room.id}
                         onClick={() => onSelectRoom?.(room)}
                         style={{
