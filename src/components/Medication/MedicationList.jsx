@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Table, Button, Alert, Spinner, Badge } from "react-bootstrap";
-import { getMedicationChart, deleteMedication } from "../../api/medicationApi";
+import { getMedicationChartByResident, deleteMedication } from "../../api/medicationApi";
 import { getCurrentUser } from "../../services/auth";
 import MedicationEditForm from "./MedicationEditForm";
 
@@ -15,7 +15,7 @@ export default function MedicationList({ chartId }) {
 
   const fetchChart = useCallback(() => {
     setStatus("loading");
-    getMedicationChart(chartId)
+    getMedicationChartByResident(chartId)
       .then((chart) => {
         setMedications(chart.medications ?? []);
         setStatus("idle");
