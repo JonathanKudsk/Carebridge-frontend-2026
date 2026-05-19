@@ -1,18 +1,28 @@
 import { Alert } from "react-bootstrap";
+import "./handbook-editor.css";
 
-// Renders the raw HTML content from the TipTap editor
 function HandbookContent({ tab }) {
-    if (!tab) return (
-        <Alert variant="info">Select a tab to view its content.</Alert>
-    );
+    if (!tab || typeof tab !== "object") {
+        return (
+            <Alert variant="info" className="mt-2">
+                Select a tab to view its content.
+            </Alert>
+        );
+    }
 
-    if (!tab.content || tab.content.trim() === "") return (
-        <Alert variant="secondary">This tab has no content yet.</Alert>
-    );
+    const hasContent = tab.content && typeof tab.content === "string" && tab.content.trim() !== "";
+
+    if (!hasContent) {
+        return (
+            <Alert variant="secondary" className="mt-2 bg-dark-subtle text-light border-secondary">
+                This tab has no content yet.
+            </Alert>
+        );
+    }
 
     return (
         <div
-            className="handbook-content p-3 border rounded"
+            className="handbook-editor-content tiptap border border-secondary-subtle rounded bg-dark-subtle text-light mt-2"
             dangerouslySetInnerHTML={{ __html: tab.content }}
         />
     );
