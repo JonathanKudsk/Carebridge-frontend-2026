@@ -22,7 +22,9 @@ import SchedulePage from "./pages/SchedulePage.jsx";
 import MedicationPage from "./pages/MedicationPage.jsx";
 import MessagePage from "./pages/(worker)/MessagePage.jsx";
 import Admin from "./pages/Admin.jsx";
+import CreateBudgetPage from "./pages/CreateBudgetPage";
 import MedicationChartPage from "./pages/MedicationChartPage";
+import SavingsGoalsPage from "./pages/SavingsGoalsPage";
 import ChatDock from "./components/Chat/ChatPopup/ChatDock.jsx";
 import HandbookPage from "./pages/HandbookPage.jsx";
 
@@ -134,10 +136,6 @@ export default function App() {
               {<Nav.Link as={Link} to="/journal-overview">
                 Journal Oversigt
               </Nav.Link>}
-
-              <Nav.Link as={Link} to="/medication-chart/1">
-                Medication Chart
-              </Nav.Link>
 
               {isAdmin && (
                 <>
@@ -271,6 +269,14 @@ export default function App() {
               }
             />
             <Route
+              path="/residents/:id/savings-goals"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN", "CAREWORKER"]}>
+                  <SavingsGoalsPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
               path="/message-page"
               element={
                 <PrivateRoute allowedRoles={["ADMIN", "CAREWORKER"]}>
@@ -303,14 +309,14 @@ export default function App() {
               path="/journal/:journalId"
               element={<ShowJournalDetails journals={journals} />}
             />
-            <Route
-              path="/medication-chart/:chartId"
-              element={
-                <PrivateRoute>
-                  <MedicationChartPage />
-                </PrivateRoute>
-              }
-            />
+              <Route
+                  path="/medication-chart/:residentId"
+                  element={
+                      <PrivateRoute>
+                          <MedicationChartPage />
+                      </PrivateRoute>
+                  }
+              />
 
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
@@ -325,6 +331,14 @@ export default function App() {
                 </PrivateRoute>
               }
             />
+              <Route
+                  path="/residents/:id/create-budget"
+                  element={
+                      <PrivateRoute>
+                          <CreateBudgetPage />
+                      </PrivateRoute>
+                  }
+              />
 
             <Route
               path="/shifts/edit/:shiftId"

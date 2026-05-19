@@ -14,6 +14,7 @@ import {
   deactivateResident,
   getJournalEntries,
 } from "../api/api.js";
+import api from "../services/api";
 
 const formatDateTime = (arr) => {
   if (!arr) return "";
@@ -33,6 +34,29 @@ export default function ResidentDetailsPage() {
   const [entries, setEntries] = useState([]);
   const [entriesLoading, setEntriesLoading] = useState(false);
   const [entriesError, setEntriesError] = useState(null);
+  const [budget, setBudget] = useState(null);
+
+    useEffect(() => {
+
+        async function fetchBudget() {
+
+            try {
+
+                const response =
+                    await api.get(
+                        `/budgets/resident/${id}`
+                    );
+
+                setBudget(response.data);
+
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
+        fetchBudget();
+
+    }, [id]);
 
   useEffect(() => {
     async function fetchResident() {
@@ -50,6 +74,7 @@ export default function ResidentDetailsPage() {
     }
     fetchResident();
   }, [id]);
+
 
   useEffect(() => {
     if (!resident?.journalId) return;
@@ -270,6 +295,12 @@ export default function ResidentDetailsPage() {
               Opret Journal Entry
             </Button>
             <Button
+              variant="outline-success"
+              onClick={() => navigate(`/residents/${id}/savings-goals`)}
+            >
+              Opsparingsmål
+            </Button>
+            <Button
               variant="outline-secondary"
               onClick={() => navigate(`/residents/edit/${id}`)}
             >
@@ -280,11 +311,73 @@ export default function ResidentDetailsPage() {
                 Deaktiver Beboer
               </Button>
             )}
+            <Button
+                variant="success"
+                onClick={() =>
+                    navigate(`/residents/${id}/create-budget`)
+                }
+            >
+                Opret Budget
+            </Button>
           </Stack>
         </Card.Body>
       </Card>
 
-      {resident.journalId && (
+        {budget && (
+
+            <Card className="shadow-sm mt-4">
+
+                <Card.Header
+                    as="h5"
+                    className="bg-success text-white"
+                >
+                    Budget
+                </Card.Header>
+
+                <Card.Body>
+
+                    <p>
+                        <strong>Income:</strong>
+                        {" "}
+                        {budget.income}
+                    </p>
+
+                    <p>
+                        <strong>Fixed Expenses:</strong>
+                        {" "}
+                        {budget.fixedExpenses}
+                    </p>
+
+                    <p>
+                        <strong>Variable Expenses:</strong>
+                        {" "}
+                        {budget.variableExpenses}
+                    </p>
+
+                    <p>
+                        <strong>Pocket Money:</strong>
+                        {" "}
+                        {budget.pocketMoneyAmount}
+                    </p>
+
+                    <p>
+                        <strong>Savings:</strong>
+                        {" "}
+                        {budget.savingsAmount}
+                    </p>
+
+                    <p>
+                        <strong>Notes:</strong>
+                        {" "}
+                        {budget.notes || "No notes"}
+                    </p>
+
+                </Card.Body>
+
+            </Card>
+        )}
+
+        {resident.journalId && (
         <Card className="shadow-sm mt-4">
           <Card.Header as="h5" className="bg-primary text-white">
             Journal entries
