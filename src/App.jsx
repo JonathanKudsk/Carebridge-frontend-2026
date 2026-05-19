@@ -17,9 +17,16 @@ import CreateResidentPage from "./pages/CreateResidentPage";
 import CreateUser from "./pages/(worker)/CreateUser";
 import LinkResidets from "./pages/(worker)/LinkResidents";
 import ShiftCreatePage from "./pages/ShiftCreatePage.jsx";
+import ShiftEditPage from "./pages/ShiftEditPage.jsx";
+import SchedulePage from "./pages/SchedulePage.jsx";
 import MedicationPage from "./pages/MedicationPage.jsx";
 import MessagePage from "./pages/(worker)/MessagePage.jsx";
 import Admin from "./pages/Admin.jsx";
+import CreateBudgetPage from "./pages/CreateBudgetPage";
+import MedicationChartPage from "./pages/MedicationChartPage";
+import SavingsGoalsPage from "./pages/SavingsGoalsPage";
+import ChatDock from "./components/Chat/ChatPopup/ChatDock.jsx";
+import HandbookPage from "./pages/HandbookPage.jsx";
 
 import {
   getToken,
@@ -29,6 +36,8 @@ import {
 } from "./services/auth";
 import ResidentDetailsPage from "./pages/ResidentDetailsPage.jsx";
 import EditResidentPage from "./pages/EditResidentPage.jsx";
+import { useSessionTimeout } from "./hooks/useSessionTimeout";
+import SessionWarningModal from "./components/SessionWarningModal";
 
 // Helper
 function readAuth() {
@@ -50,7 +59,7 @@ function PrivateRoute({ children, allowedRoles }) {
   if (allowedRoles && user?.role && !allowedRoles.includes(user.role)) {
     // Hvis rollen IKKE er i listen over tilladte roller
     console.warn(
-      `Adgang nægtet: Bruger med rolle '${user.role}' forsøgte at tilgå en beskyttet rute.`
+      `Adgang nægtet: Bruger med rolle '${user.role}' forsøgte at tilgå en beskyttet rute.`,
     );
     // Omdiriger til dashboardet eller en 'Adgang Nægtet'-side
     return <Navigate to="/" replace />;
@@ -63,6 +72,7 @@ function PrivateRoute({ children, allowedRoles }) {
 export default function App() {
   const navigate = useNavigate();
   const [{ token, user }, setAuth] = useState(readAuth());
+  const [showWarning, setShowWarning] = useState(false);
   const isAdmin = user?.role === "ADMIN";
   const isCareworker = user?.role === "CAREWORKER";
   //const isCareworker = user?.role === "CAREWORKER";
@@ -81,10 +91,16 @@ export default function App() {
     };
   }, []);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    setShowWarning(false);
+    await logout();
     navigate("/login", { replace: true });
   };
+
+  useSessionTimeout({
+    onWarn: () => setShowWarning(true),
+    onExpire: () => handleLogout(),
+  });
 
   return (
     <>
@@ -104,14 +120,22 @@ export default function App() {
                 Calendar
               </Nav.Link>
 
+              <Nav.Link as={Link} to="/handbook">
+                Håndbog
+              </Nav.Link>
+
+              <Nav.Link as={Link} to="/schedule">
+                Vagtplan
+              </Nav.Link>
+
               <Nav.Link as={Link} to="/resident-overview">
                 Resident Overview
               </Nav.Link>
 
-              {/* TODO: Skal diskuteres med gruppen om det skal være en ting */}
-              {/* <Nav.Link as={Link} to="/journal-overview">
+
+              {<Nav.Link as={Link} to="/journal-overview">
                 Journal Oversigt
-              </Nav.Link> */}
+              </Nav.Link>}
 
               {isAdmin && (
                 <>
@@ -164,7 +188,13 @@ export default function App() {
         </Container>
       </Navbar>
 
-      {/* Routes */}
+      <SessionWarningModal
+        show={showWarning}
+        onRefreshed={() => setShowWarning(false)}
+        onExpired={() => handleLogout()}
+      />
+
+            {/* Routes */}
       <SnackProvider>
         <Container className="mt-4">
           <Routes>
@@ -172,10 +202,19 @@ export default function App() {
               path="/"
               element={
                 token ? (
-                  <Home /> // Hvis logget ind (token er sandt), vis Home-komponenten
+                  <Home />
                 ) : (
                   <Navigate to="/login" replace />
-                ) // Hvis ikke logget ind, omdiriger til /login
+                )
+              }
+            />
+
+            <Route
+              path="/handbook"
+              element={
+                <PrivateRoute>
+                  <HandbookPage />
+                </PrivateRoute>
               }
             />
 
@@ -208,8 +247,6 @@ export default function App() {
               path="/create-resident"
               element={
                 <PrivateRoute allowedRoles={["ADMIN"]}>
-                  {" "}
-                  {/* <-- Tjekker for Admin */}
                   <CreateResidentPage />
                 </PrivateRoute>
               }
@@ -232,6 +269,14 @@ export default function App() {
               }
             />
             <Route
+              path="/residents/:id/savings-goals"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN", "CAREWORKER"]}>
+                  <SavingsGoalsPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
               path="/message-page"
               element={
                 <PrivateRoute allowedRoles={["ADMIN", "CAREWORKER"]}>
@@ -248,7 +293,6 @@ export default function App() {
               }
             />
 
-            {/* Journal Pages */}
             <Route
               path="/residents/:id/create-journal"
               element={
@@ -257,15 +301,23 @@ export default function App() {
                 </PrivateRoute>
               }
             />
-            {/* TODO: Skal diskuteres med gruppen om det skal være en ting */}
-            {/* <Route
+            {<Route
               path="/journal-overview"
               element={<JournalOverviewPage journals={journals} />}
-            /> */}
+            />}
             <Route
               path="/journal/:journalId"
               element={<ShowJournalDetails journals={journals} />}
             />
+              <Route
+                  path="/medication-chart/:residentId"
+                  element={
+                      <PrivateRoute>
+                          <MedicationChartPage />
+                      </PrivateRoute>
+                  }
+              />
+
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/admin/create-user" element={<CreateUser />} />
@@ -274,8 +326,34 @@ export default function App() {
             <Route
               path="/shifts/create"
               element={
-                <PrivateRoute allowedRoles={["PLANNER"]}>
+                <PrivateRoute allowedRoles={["PLANNER", "ADMIN"]}>
                   <ShiftCreatePage />
+                </PrivateRoute>
+              }
+            />
+              <Route
+                  path="/residents/:id/create-budget"
+                  element={
+                      <PrivateRoute>
+                          <CreateBudgetPage />
+                      </PrivateRoute>
+                  }
+              />
+
+            <Route
+              path="/shifts/edit/:shiftId"
+              element={
+                <PrivateRoute allowedRoles={["PLANNER", "ADMIN"]}>
+                  <ShiftEditPage />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/schedule"
+              element={
+                <PrivateRoute>
+                  <SchedulePage />
                 </PrivateRoute>
               }
             />
@@ -283,6 +361,8 @@ export default function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Container>
+
+        {token && <ChatDock visible={Boolean(token)} />}
       </SnackProvider>
     </>
   );

@@ -1,0 +1,99 @@
+.handbook-editor {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+/* Base Canvas styled for dark theme layout environments */
+.handbook-editor-content.tiptap {
+    min-height: 420px;
+    padding: 1.5rem;
+    outline: none !important;
+    font-family: var(--bs-body-font-family);
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #f8f9fa !important; /* Forces bright legible gray-white font text */
+}
+
+.handbook-editor-content.tiptap h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    color: #ffffff;
+}
+
+.handbook-editor-content.tiptap h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-top: 1.25rem;
+    margin-bottom: 0.75rem;
+    color: #ffffff;
+}
+
+.handbook-editor-content.tiptap p {
+    margin-bottom: 0.85rem;
+}
+
+.handbook-editor-content.tiptap ul,
+.handbook-editor-content.tiptap ol {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.handbook-editor-content.tiptap ul[data-type="taskList"] {
+    list-style: none;
+    padding-left: 0.25rem;
+}
+
+.handbook-editor-content.tiptap ul[data-type="taskList"] li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+}
+
+.handbook-editor-content.tiptap ul[data-type="taskList"] input[type="checkbox"] {
+    margin-top: 0.35rem;
+    cursor: pointer;
+}
+
+/* Dark Mode Data Tables layout configuration */
+.handbook-editor-content.tiptap table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+    margin: 1.5rem 0;
+    overflow: hidden;
+}
+
+.handbook-editor-content.tiptap td,
+.handbook-editor-content.tiptap th {
+    min-width: 1rem;
+    border: 1px solid #495057; /* Mid tone grey borders */
+    padding: 8px 12px;
+    vertical-align: top;
+    box-sizing: border-box;
+}
+
+.handbook-editor-content.tiptap th {
+    font-weight: 600;
+    text-align: left;
+    background-color: #343a40; /* Dark heading blocks */
+    color: #ffffff;
+}
+
+.handbook-editor-content.tiptap a {
+    color: #6ea8fe; /* Bright blue tint optimized for high dark contrast ratio */
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* Placeholder support for dark mode canvas */
+.handbook-editor-content.tiptap p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: #6c757d; /* Muted gray placeholder text */
+    pointer-events: none;
+    height: 0;
+}
