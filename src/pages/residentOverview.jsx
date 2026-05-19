@@ -134,10 +134,16 @@ export default function ResidentOverview() {
                     <div className="fw-semibold">
                       {resident.firstName} {resident.lastName}
                     </div>
-                    <div className="text-muted small">ID: {resident.id}</div>
+                    <div className="text-muted small">Beboer ID: {resident.id}</div>
                     <div className="text-muted small">
-                      Journal: {resident.journalId ? resident.journalId : "Ikke tilknyttet"}
+                      Alder: {resident.age ? resident.age : "Ikke angivet"}
                     </div>
+                    <div className="text-muted small">
+                      Køn: {resident.gender ? resident.gender : "Ikke angivet"}
+                    </div>
+                    <span className={`badge ${resident.active ? "bg-success" : "bg-danger"}`} >        
+                      {resident.active ? "" : "Deaktiveret"}
+                    </span>
                   </ListGroup.Item>
                 ))
             ) : (
