@@ -109,7 +109,7 @@ export default function SavingsGoalsPage() {
             <span><strong>CPR:</strong> ******-****</span>
             {noBudget && (
               <Alert variant="warning" className="mb-0 py-1 px-2 small">
-                Ingen budget oprettet for denne beboer. Opret et budget (US-4a) først.
+                Ingen budget oprettet for denne beboer. Opret et budget først.
               </Alert>
             )}
           </Stack>
