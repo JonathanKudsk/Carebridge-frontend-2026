@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-    Button, Form, Row, Col, Spinner, Badge, Modal
-} from "react-bootstrap";
+import { Button, Form, Row, Col, Spinner, Badge, Modal } from "react-bootstrap";
 import ResidentList from "../components/ResidentList";
 import { getMedicationChart, updateMedication } from "../api/medicationApi";
 
@@ -88,6 +86,16 @@ export default function MedicationPage() {
         } finally {
             setSaving(false);
         }
+
+import ResidentList from "../components/ResidentList";
+import { useNavigate } from "react-router-dom";
+
+export default function MedicationPage() {
+    const navigate = useNavigate();
+
+    function handleResidentSelect(resident) {
+        navigate(`/medication-chart/${resident.id}`);
+
     }
 
     return (
@@ -170,6 +178,11 @@ function MedicationRow({ med, onEdit }) {
             <Button size="sm" variant="outline-primary" onClick={onEdit}>
                 Rediger
             </Button>
+
+            <h1 className="h4 mb-4">Medication Page</h1>
+
+            <ResidentList onSelect={handleResidentSelect} />
+
         </div>
     );
 }
