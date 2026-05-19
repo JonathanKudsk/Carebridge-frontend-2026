@@ -18,8 +18,14 @@ import api from "../services/api";
 
 const formatDateTime = (arr) => {
   if (!arr) return "";
-  const [y, mo, d, h, mi, s] = arr;
-  return new Date(y, mo - 1, d, h, mi, s).toLocaleString("da-DK");
+
+  if (Array.isArray(arr) && arr.length >= 3) {
+    const [y, mo, d, h = 0, mi = 0, s = 0] = arr;
+    return new Date(y, mo - 1, d, h, mi, s).toLocaleString("da-DK");
+  }
+
+  const date = new Date(arr);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleString("da-DK");
 };
 
 export default function ResidentDetailsPage() {
@@ -426,8 +432,26 @@ export default function ResidentDetailsPage() {
                             {formatDateTime(entry.updatedAt)}
                           </p>
                         )}
-                      <hr />
-                      <p style={{ whiteSpace: "pre-wrap" }}>{entry.content}</p>
+                      <Button
+                        variant="outline-primary"
+                        onClick={() =>
+                          navigate(
+                            `/journals/${entry.journalId || resident.journalId}/entries/${entry.id}`,
+                            {
+                              state: {
+                                entry: {
+                                  ...entry,
+                                  journalId: entry.journalId || resident.journalId,
+                                  residentId: resident.id,
+                                  residentName: `${resident.firstName ?? ""} ${resident.lastName ?? ""}`.trim(),
+                                },
+                              },
+                            },
+                          )
+                        }
+                      >
+                        Vis journal entry detaljer
+                      </Button>
                     </Accordion.Body>
                   </Accordion.Item>
                 ))}

@@ -24,6 +24,7 @@ import SchedulePage from "./pages/SchedulePage.jsx";
 import MedicationPage from "./pages/MedicationPage.jsx";
 import MessagePage from "./pages/(worker)/MessagePage.jsx";
 import Admin from "./pages/Admin.jsx";
+import Substitute from "./pages/Substitute.jsx";
 import CreateBudgetPage from "./pages/CreateBudgetPage";
 import MedicationChartPage from "./pages/MedicationChartPage";
 import SavingsGoalsPage from "./pages/SavingsGoalsPage";
@@ -77,10 +78,12 @@ export default function App() {
   const [showWarning, setShowWarning] = useState(false);
   const isAdmin = user?.role === "ADMIN";
   const isCareworker = user?.role === "CAREWORKER";
-  //const isCareworker = user?.role === "CAREWORKER";
-  //const isGuardian = user?.role === "GUARDIAN";
+  const isPlanner = user?.role === "PLANNER";
+  const canReadJournals = ["ADMIN", "CAREWORKER", "GUARDIAN", "SUBSTITUTE"].includes(
+    user?.role,
+  );
 
-  const [journals, setJournals] = useState([]);
+  const [, setJournals] = useState([]);
 
   // Listen for login/logout
   useEffect(() => {
@@ -135,9 +138,11 @@ export default function App() {
               </Nav.Link>
 
 
-              {<Nav.Link as={Link} to="/journal-overview">
-                Journal Oversigt
-              </Nav.Link>}
+              {canReadJournals && (
+                <Nav.Link as={Link} to="/journal-overview">
+                  Journal Oversigt
+                </Nav.Link>
+              )}
 
               {isAdmin && (
                 <>
@@ -160,6 +165,12 @@ export default function App() {
                     Admin
                   </Nav.Link>
                 </>
+              )}
+
+              {(isAdmin || isPlanner) && (
+                <Nav.Link as={Link} to="/substitute">
+                  Vikarer
+                </Nav.Link>
               )}
 
               {(isAdmin || isCareworker) && (
@@ -249,6 +260,16 @@ export default function App() {
                 </PrivateRoute>
               }
             />
+
+            <Route
+              path="/substitute"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN", "PLANNER"]}>
+                  <Substitute />
+                </PrivateRoute>
+              }
+            />
+
             <Route
               path="/create-resident"
               element={
@@ -302,18 +323,26 @@ export default function App() {
             <Route
               path="/residents/:id/create-journal"
               element={
-                <PrivateRoute>
+                <PrivateRoute allowedRoles={["ADMIN", "CAREWORKER", "SUBSTITUTE"]}>
                   <CreateJournalPage addJournal={setJournals} />
                 </PrivateRoute>
               }
             />
-            {<Route
-              path="/journal-overview"
-              element={<JournalOverviewPage journals={journals} />}
-            />}
             <Route
-              path="/journal/:journalId"
-              element={<ShowJournalDetails journals={journals} />}
+              path="/journal-overview"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN", "CAREWORKER", "GUARDIAN", "SUBSTITUTE"]}>
+                  <JournalOverviewPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/journals/:journalId/entries/:entryId"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN", "CAREWORKER", "GUARDIAN", "SUBSTITUTE"]}>
+                  <ShowJournalDetails />
+                </PrivateRoute>
+              }
             />
               <Route
                   path="/medication-chart/:residentId"
