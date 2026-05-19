@@ -1,7 +1,19 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Container, Card, Button, Stack, Spinner, Alert, Accordion } from "react-bootstrap";
-import { getResidentById, deactivateResident, getJournalEntries } from "../api/api.js";
+import {
+  Container,
+  Card,
+  Button,
+  Stack,
+  Spinner,
+  Alert,
+  Accordion,
+} from "react-bootstrap";
+import {
+  getResidentById,
+  deactivateResident,
+  getJournalEntries,
+} from "../api/api.js";
 
 const formatDateTime = (arr) => {
   if (!arr) return "";
@@ -12,7 +24,7 @@ const formatDateTime = (arr) => {
 export default function ResidentDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
   const [resident, setResident] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -58,10 +70,14 @@ export default function ResidentDetailsPage() {
   }, [resident?.journalId]);
 
   const handleDeactivate = async () => {
-    if (window.confirm(`Er du sikker på, at du vil deaktivere denne Beboer ${resident.firstName}?`)) {
+    if (
+      window.confirm(
+        `Er du sikker på, at du vil deaktivere denne Beboer ${resident.firstName}?`,
+      )
+    ) {
       try {
         await deactivateResident(id);
-        navigate("/resident-overview"); 
+        navigate("/resident-overview");
       } catch (err) {
         console.error(err);
         setError("Noget gik galt");
@@ -83,7 +99,6 @@ export default function ResidentDetailsPage() {
     });
   };
 
-
   if (loading) {
     return (
       <Container className="text-center mt-5">
@@ -96,7 +111,9 @@ export default function ResidentDetailsPage() {
     return (
       <Container className="mt-5">
         <Alert variant="danger">{error}</Alert>
-        <Button onClick={() => navigate("/resident-overview")}>Tilbage til oversigt</Button>
+        <Button onClick={() => navigate("/resident-overview")}>
+          Tilbage til oversigt
+        </Button>
       </Container>
     );
   }
@@ -118,7 +135,6 @@ export default function ResidentDetailsPage() {
           Beboer Profil
         </Card.Header>
         <Card.Body>
-        
           <div className="mb-4">
             <div className="d-flex justify-content-between align-items-start">
               <div>
@@ -136,7 +152,6 @@ export default function ResidentDetailsPage() {
             </div>
           </div>
 
-        
           <Stack gap={2} className="mb-4">
             <div className="d-flex align-items-center">
               <strong>CPR nummer:</strong>
@@ -153,7 +168,7 @@ export default function ResidentDetailsPage() {
             </div>
             <div>
               <strong>Alder:</strong>{" "}
-              <span className="ms-2">{resident.age || "Ikke oplyst"} år</span>
+              <span className="ms-2">{resident.age || "Ikke oplyst"} </span>
             </div>
             <div>
               <strong>Køn:</strong>{" "}
@@ -163,7 +178,7 @@ export default function ResidentDetailsPage() {
               <strong>Tilknyttet Journal:</strong>
               <span className="ms-2">
                 {resident.journalId
-                  ? `#${resident.journalId}`
+                  ? `${resident.journalId}`
                   : "Ingen Journal fundet"}
               </span>
             </div>
@@ -171,7 +186,7 @@ export default function ResidentDetailsPage() {
               <strong>Medicin ID:</strong>
               <span className="ms-2">
                 {resident.medicationChartId
-                  ? `#${resident.medicationChartId}`
+                  ? `${resident.medicationChartId}`
                   : "Intet medicinkort tilknyttet"}
               </span>
             </div>
@@ -179,15 +194,12 @@ export default function ResidentDetailsPage() {
 
           <hr />
 
-        
           <h6 className="text-primary mb-3">Kontaktoplysninger</h6>
           <Stack gap={2}>
-            
             <div>
               <strong>Email:</strong>{" "}
               <span className="ms-2">
-                {resident.displayEmail ||
-                  "Ingen kontakt-email"}
+                {resident.displayEmail || "Ingen kontakt-email"}
               </span>
             </div>
             <div>
@@ -214,6 +226,40 @@ export default function ResidentDetailsPage() {
               </div>
             </div>
           </Stack>
+          <hr />
+
+          <h6 className="text-primary mb-3">Pårørende / Værger</h6>
+          {resident.guardians && resident.guardians.length > 0 ? (
+            <Stack gap={3} className="mb-4">
+              {resident.guardians.map((guardian, index) => (
+                <div key={guardian.id}>
+                  <div className="fw-bold text-white small mb-2 border-bottom pb-1">
+                    Pårørende {index + 1}:{" "}
+                    {guardian.displayName || guardian.name ||"Intet navn angivet"}
+                  </div>
+
+                  <Stack gap={2}>
+                    <div>
+                      <strong>Telefon:</strong>{" "}
+                      <span className="ms-2">
+                        {guardian.displayPhone || "Intet telefonnummer"}
+                      </span>
+                    </div>
+                    <div>
+                      <strong>Email:</strong>{" "}
+                      <span className="ms-2">
+                        {guardian.displayEmail || "Ingen e-mail oplyst"}
+                      </span>
+                    </div>
+                  </Stack>
+                </div>
+              ))}
+            </Stack>
+          ) : (
+            <p className="text-muted small italic mb-4">
+              Ingen pårørende registreret på denne beboer.
+            </p>
+          )}
 
           <hr />
           <Stack direction="horizontal" gap={3} className="justify-content-end">
@@ -229,9 +275,11 @@ export default function ResidentDetailsPage() {
             >
               Rediger Information
             </Button>
-            <Button variant="danger" onClick={handleDeactivate}>
-              Deaktiver Beboer
-            </Button>
+            {resident.active && (
+              <Button variant="danger" onClick={handleDeactivate}>
+                Deaktiver Beboer
+              </Button>
+            )}
           </Stack>
         </Card.Body>
       </Card>
