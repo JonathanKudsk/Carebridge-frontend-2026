@@ -1,280 +1,311 @@
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Alert, Badge, Card, Col, Form, Row, Spinner } from "react-bootstrap";
 import api from "../services/api";
+
+function asArray(value) {
+  if (Array.isArray(value)) return value;
+  return value ? [value] : [];
+}
+
+function getCollection(data) {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.content)) return data.content;
+  if (Array.isArray(data?.items)) return data.items;
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
+}
+
+function getEntityId(entity) {
+  return (
+    entity?.id ??
+    entity?.locationId ??
+    entity?.location_id ??
+    entity?.departmentId ??
+    entity?.department_id
+  );
+}
+
+function getLocationName(location) {
+  return (
+    location?.name ??
+    location?.locationName ??
+    location?.location_name ??
+    location?.departmentName ??
+    location?.department_name ??
+    "Ukendt lokation"
+  );
+}
+
+function getLocationAddress(location) {
+  return (
+    location?.address ??
+    location?.Address ??
+    location?.street ??
+    location?.streetName ??
+    ""
+  );
+}
+
+function getLocationCity(location) {
+  if (typeof location?.city === "string") {
+    return location.city;
+  }
+
+  return (
+    location?.city?.cityName ??
+    location?.city?.city_name ??
+    location?.cityName ??
+    location?.city_name ??
+    ""
+  );
+}
+
+function getLocationZip(location) {
+  return (
+    location?.city?.postalCode ??
+    location?.city?.postal_code ??
+    location?.zipCode ??
+    location?.zip_code ??
+    location?.postalCode ??
+    location?.postal_code ??
+    ""
+  );
+}
+
+function getSubstituteName(substitute) {
+  return (
+    substitute?.name ??
+    substitute?.fullName ??
+    substitute?.full_name ??
+    substitute?.email ??
+    "Ukendt vikar"
+  );
+}
+
+function getSubstituteEmail(substitute) {
+  return substitute?.email ?? substitute?.mail ?? "";
+}
+
+function getSubstituteLocations(substitute) {
+  const directLocations = [
+    ...asArray(substitute?.locations),
+    ...asArray(substitute?.location),
+    ...asArray(substitute?.departments),
+    ...asArray(substitute?.department),
+  ].filter(Boolean);
+
+  if (directLocations.length) {
+    return directLocations;
+  }
+
+  const locationId =
+    substitute?.locationId ??
+    substitute?.location_id ??
+    substitute?.departmentId ??
+    substitute?.department_id;
+
+  if (!locationId) {
+    return [];
+  }
+
+  return [
+    {
+      id: locationId,
+      name: substitute?.locationName ?? substitute?.departmentName,
+    },
+  ];
+}
+
+function formatApiError(error, fallbackMessage) {
+  return (
+    error?.response?.data?.message ??
+    error?.response?.data?.msg ??
+    error?.message ??
+    fallbackMessage
+  );
+}
 
 export default function Substitute() {
   const [substitutes, setSubstitutes] = useState([]);
-  const [departments, setDepartments] = useState([]);
-  const [selectedDepartmentId, setSelectedDepartmentId] = useState("");
-
-  //TODO: Remove test departments when backend is ready with data
-  const testDepartments = [
-    {
-      id: "test-department-a",
-      name: "Test Department A",
-      address: "Showdown vej 21",
-      city: "Falskeby",
-      zip_code: "1234",
-    },
-    {
-      id: "test-department-b",
-      name: "Test Department B",
-      address: "Morgenvej 7",
-      city: "Solkysten",
-      zip_code: "5678",
-    },
-    {
-      id: "test-department-c",
-      name: "Test Department C",
-      address: "Hovedgade 14",
-      city: "Nordby",
-      zip_code: "9012",
-    },
-  ];
-
-  //TODO: Remove test substitutes and departments when backend is ready with data
-  const testSubstitutes = [
-    {
-      id: "test-substitute-1",
-      name: "Kevin",
-      email: "kevin@test.com",
-      role: "Vikar",
-      departments: [testDepartments[0], testDepartments[1]],
-      cities: {
-        name: testDepartments[0].city,
-        zip_code: testDepartments[0].zip_code,
-      },
-    },
-    {
-      id: "test-substitute-2",
-      name: "Maja",
-      email: "maja@test.com",
-      role: "Vikar",
-      departments: testDepartments[0],
-      cities: {
-        name: testDepartments[0].city,
-        zip_code: testDepartments[0].zip_code,
-      },
-    },
-  ];
-
-  //TODO: Might move to a css file
-  const pageStyles = {
-    page: {
-      padding: "24px",
-    },
-    title: {
-      marginBottom: "8px",
-    },
-    intro: {
-      marginBottom: "24px",
-      color: "#555",
-    },
-    selectRow: {
-      marginBottom: "24px",
-      color: "#555",
-    },
-    select: {
-      minWidth: "240px",
-      padding: "10px 12px",
-      borderRadius: "10px",
-      border: "1px solid #cfd6e4",
-      background: "#fff",
-      color: "#334155",
-    },
-    grid: {
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-      gap: "16px",
-      alignItems: "stretch",
-    },
-    card: {
-      border: "1px solid #d8deea",
-      borderRadius: "16px",
-      padding: "18px",
-      background: "#fff",
-      boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
-      minHeight: "220px",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-between",
-    },
-    topRow: {
-      display: "flex",
-      justifyContent: "space-between",
-      gap: "12px",
-      marginBottom: "14px",
-      flexWrap: "wrap",
-    },
-    name: {
-      margin: 0,
-      fontSize: "1.25rem",
-      fontWeight: 700,
-      color: "#0f172a",
-    },
-    meta: {
-      margin: 0,
-      color: "#334155",
-      fontSize: "0.95rem",
-    },
-    details: {
-      borderTop: "1px solid #eef2f7",
-      paddingTop: "14px",
-      display: "grid",
-      gap: "8px",
-      color: "#334155",
-    },
-    label: {
-      fontWeight: 600,
-      color: "#0f172a",
-    },
-    emptyState: {
-      padding: "16px",
-      borderRadius: "12px",
-      background: "#f8fafc",
-      border: "1px dashed #cbd5e1",
-      color: "#475569",
-      marginTop: "16px",
-    },
-  };
-
-  const fetchSubstitutes = useCallback(() => {
-    api
-      .get("/substitutes")
-      .then((response) => response.data)
-      .then((data) => setSubstitutes(data))
-      .catch((error) => {
-        console.error("Error fetching substitutes:", error);
-        alert("Der skete en fejl ved indlæsning af vikarer. Prøv igen senere.");
-      });
-  }, []);
+  const [locations, setLocations] = useState([]);
+  const [selectedLocationId, setSelectedLocationId] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [errors, setErrors] = useState([]);
 
   useEffect(() => {
-    fetchSubstitutes();
-  }, [fetchSubstitutes]);
+    let isMounted = true;
 
-  const fetchDepartments = useCallback(() => {
-    api
-      .get("/locations")
-      .then((response) => response.data)
-      .then((data) => setDepartments(data))
-      .catch((error) => {
-        console.error("Error fetching departments:", error);
-        alert("Der skete en fejl ved indlæsning af afdelinger. Prøv igen senere.");
-      });
-  }, []);
+    async function fetchData() {
+      setLoading(true);
+      setErrors([]);
 
-  useEffect(() => {
-    fetchDepartments();
-  }, [fetchDepartments]);
+      const [substitutesResult, locationsResult] = await Promise.allSettled([
+        api.get("/users/substitutes"),
+        api.get("/users/substitutes/locations"),
+      ]);
 
-  function handleChange(event) {
-    setSelectedDepartmentId(event.target.value);
-  }
+      if (!isMounted) return;
 
-  function getSubstituteDepartments(substitute) {
-    if (Array.isArray(substitute.departments)) {
-      return substitute.departments;
+      const nextErrors = [];
+
+      if (substitutesResult.status === "fulfilled") {
+        setSubstitutes(getCollection(substitutesResult.value.data));
+      } else {
+        setSubstitutes([]);
+        nextErrors.push(
+          formatApiError(
+            substitutesResult.reason,
+            "Der skete en fejl ved indlaesning af vikarer.",
+          ),
+        );
+      }
+
+      if (locationsResult.status === "fulfilled") {
+        setLocations(getCollection(locationsResult.value.data));
+      } else {
+        setLocations([]);
+        nextErrors.push(
+          formatApiError(
+            locationsResult.reason,
+            "Der skete en fejl ved indlaesning af lokationer.",
+          ),
+        );
+      }
+
+      setErrors(nextErrors);
+      setLoading(false);
     }
 
-    return substitute.departments ? [substitute.departments] : [];
-  }
+    fetchData();
 
-  const allSubstitutes = [...substitutes, ...testSubstitutes];
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
-  const visibleSubstitutes = selectedDepartmentId
-    ? allSubstitutes.filter((substitute) => {
-        return getSubstituteDepartments(substitute).some((department) => {
-          return String(department.id) === selectedDepartmentId;
-        });
-      })
-    : allSubstitutes;
+  const visibleSubstitutes = useMemo(() => {
+    if (!selectedLocationId) return substitutes;
+
+    return substitutes.filter((substitute) =>
+      getSubstituteLocations(substitute).some(
+        (location) => String(getEntityId(location)) === selectedLocationId,
+      ),
+    );
+  }, [selectedLocationId, substitutes]);
 
   return (
-    <div style={pageStyles.page}>
-      <h1 style={pageStyles.title}>Vikar</h1>
-      <p style={pageStyles.intro}>Velkommen til Vikar-siden!</p>
+    <div>
+      <div className="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+        <div>
+          <h1 className="h3 mb-1">Vikarer</h1>
+          <p className="text-muted mb-0">
+            Oversigt over vikarer og deres tilknyttede lokationer.
+          </p>
+        </div>
 
-      <div style={pageStyles.selectRow}>
-        <select
-          name="departments"
-          onChange={handleChange}
-          value={selectedDepartmentId}
-          style={pageStyles.select}
+        <Form.Select
+          aria-label="Filtrer vikarer efter lokation"
+          value={selectedLocationId}
+          onChange={(event) => setSelectedLocationId(event.target.value)}
+          style={{ maxWidth: "320px" }}
+          disabled={loading || locations.length === 0}
         >
-          <option value="">Vælg en afdeling</option>
-          {departments.map((department) => (
-            <option key={department.id} value={department.id}>
-              {department.name}
-            </option>
-          ))}
-          {testDepartments.map((department) => (
-            <option key={department.id} value={department.id}>
-              {department.location_name} (Test)
-            </option>
-          ))}
-        </select>
+          <option value="">Alle lokationer</option>
+          {locations.map((location, index) => {
+            const locationId = getEntityId(location);
+            return (
+              <option key={locationId ?? index} value={locationId ?? ""}>
+                {getLocationName(location)}
+              </option>
+            );
+          })}
+        </Form.Select>
       </div>
 
-      <div style={pageStyles.grid}>
-        {visibleSubstitutes.map((substitute) => (
-          <div key={substitute.id} style={pageStyles.card}>
-            <div style={pageStyles.topRow}>
-              <h2 style={pageStyles.name}>{substitute.name}</h2>
-              <p style={pageStyles.meta}>{substitute.role}</p>
-            </div>
+      {errors.map((error) => (
+        <Alert key={error} variant="danger">
+          {error}
+        </Alert>
+      ))}
 
-            <div style={pageStyles.details}>
-              <p style={pageStyles.meta}>
-                <span style={pageStyles.label}>Email:</span> {substitute.email}
-              </p>
-              <div>
-                <p style={pageStyles.meta}>
-                  <span style={pageStyles.label}>Departments:</span>
-                </p>
-                <div style={{ display: "grid", gap: "8px", marginTop: "6px" }}>
-                  {getSubstituteDepartments(substitute).length > 0 ? (
-                    getSubstituteDepartments(substitute).map((department) => (
-                      <div
-                        key={department.id}
-                        style={{
-                          padding: "10px 12px",
-                          borderRadius: "12px",
-                          background: "#f8fafc",
-                          border: "1px solid #e2e8f0",
-                        }}
-                      >
-                        <p style={pageStyles.meta}>
-                          <span style={pageStyles.label}>Name:</span>{" "}
-                          {department.name ?? "N/A"}
-                        </p>
-                        <p style={pageStyles.meta}>
-                          <span style={pageStyles.label}>Address:</span>{" "}
-                          {department.address ?? "N/A"}
-                        </p>
-                        <p style={pageStyles.meta}>
-                          <span style={pageStyles.label}>City:</span>{" "}
-                          {department.city ?? "N/A"}{" "}
-                          {department.zip_code ?? ""}
-                        </p>
+      {loading ? (
+        <div className="d-flex align-items-center gap-2 text-muted">
+          <Spinner animation="border" size="sm" />
+          <span>Henter vikarer...</span>
+        </div>
+      ) : visibleSubstitutes.length > 0 ? (
+        <Row xs={1} md={2} xl={3} className="g-3">
+          {visibleSubstitutes.map((substitute, index) => {
+            const substituteLocations = getSubstituteLocations(substitute);
+            const substituteId = getEntityId(substitute) ?? index;
+
+            return (
+              <Col key={substituteId}>
+                <Card className="h-100 shadow-sm">
+                  <Card.Body>
+                    <div className="d-flex justify-content-between align-items-start gap-2 mb-3">
+                      <div>
+                        <Card.Title as="h2" className="h5 mb-1">
+                          {getSubstituteName(substitute)}
+                        </Card.Title>
+                        {getSubstituteEmail(substitute) && (
+                          <Card.Text className="text-muted mb-0">
+                            {getSubstituteEmail(substitute)}
+                          </Card.Text>
+                        )}
                       </div>
-                    ))
-                  ) : (
-                    <p style={pageStyles.meta}>N/A</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
+                      <Badge bg="secondary">
+                        {substitute.role ?? "Vikar"}
+                      </Badge>
+                    </div>
 
-      </div>
+                    <div className="border-top pt-3">
+                      <p className="fw-semibold mb-2">Lokationer</p>
+                      {substituteLocations.length > 0 ? (
+                        <div className="d-grid gap-2">
+                          {substituteLocations.map((location, locationIndex) => {
+                            const address = getLocationAddress(location);
+                            const city = getLocationCity(location);
+                            const zip = getLocationZip(location);
+                            const hasAddress = address || city || zip;
 
-      {selectedDepartmentId &&
-        visibleSubstitutes.length === 0 &&
-        selectedDepartmentId !== testDepartments[0].id && (
-        <p style={pageStyles.emptyState}>
-          No substitutes match the selected department.
-        </p>
+                            return (
+                              <div
+                                key={getEntityId(location) ?? locationIndex}
+                                className="border rounded p-2 bg-light"
+                              >
+                                <p className="mb-1 fw-semibold">
+                                  {getLocationName(location)}
+                                </p>
+                                {hasAddress && (
+                                  <p className="mb-0 text-muted">
+                                    {[address, [zip, city].filter(Boolean).join(" ")]
+                                      .filter(Boolean)
+                                      .join(", ")}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-muted mb-0">
+                          Ingen lokationer tilknyttet.
+                        </p>
+                      )}
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            );
+          })}
+        </Row>
+      ) : (
+        <Alert variant="secondary">
+          {selectedLocationId
+            ? "Ingen vikarer matcher den valgte lokation."
+            : "Ingen vikarer fundet."}
+        </Alert>
       )}
     </div>
   );

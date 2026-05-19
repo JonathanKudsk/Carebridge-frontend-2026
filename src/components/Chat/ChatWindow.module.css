@@ -1,0 +1,140 @@
+.bubble{
+    padding: 9px 13px;
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 65%;
+    word-break: break-word;
+}
+
+.bubbleOwn {
+    background-color: #378add;
+    color: #fff;
+    border-radius: 16px 16px 4px 16px;
+}
+
+.bubbleOther {
+    background-color: #2e4057;
+    border: 0.5px solid #344d63;
+    color: #dce8f5;
+    border-radius: 16px 16px 16px 4px;
+}
+
+.bubbleInactive {
+    background-color: #6b7a8d !important;
+    color: #dce8f5 !important;
+    border-color: #6b7a8d !important;
+    opacity: 0.7;
+}
+
+.senderName {
+    font-size: 11px;
+    color: #7a95ad;
+    margin-bottom: 3px;
+}
+
+.timestamp {
+    font-size: 11px;
+    color: #a0b4c8;
+    margin-top: 3px;
+}
+
+.inputBar {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+    padding: 12px 16px;
+    border-top: 0.5px solid #344d63;
+    background-color: #1e2a3a;
+}
+
+.input {
+    flex: 1;
+    padding: 9px 14px;
+    border: 0.5px solid #344d63;
+    border-radius: 20px;
+    font-size: 14px;
+    background-color: #2e4057;
+    color: #dce8f5;
+    outline: none;
+}
+
+.input::placeholder {
+    color: #7a95ad;
+}
+
+.input:focus {
+    border-color: #4a6fa5;
+}
+
+
+.sendButton,
+.sendButton:hover,
+.sendButton:focus,
+.sendButton:active {
+    background-color: #378add !important;
+    border-color: #378add !important;
+    color: #fff !important;
+    border-radius: 10px;
+}
+
+.sendButton:active{
+    transform: scale(0.95) !important;
+}
+
+.sendButton:hover {
+    background-color: #185fa5 !important;
+}
+
+.sendButtonDisabled {
+    background-color: #6b7a8d !important;
+    border-color: #6b7a8d !important;
+    cursor: not-allowed !important;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    background-color: #1e2a3a;
+}
+
+.messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-color: #253347;
+}
+
+.messageWrapper{
+    display: flex;
+    margin-bottom: 8px;
+}
+
+.messageWrapperOwn {
+    justify-content: flex-end;
+}
+
+.messageWrapperOther {
+    justify-content: flex-start;
+}
+
+.messages::-webkit-scrollbar{
+    width: 6px;
+}
+
+.messages::-webkit-scrollbar-track{
+    background-color: transparent;
+}
+
+.messages::-webkit-scrollbar-thumb{
+    background-color: #344d63;
+    border-radius: 10px;
+}
+.messages::-webkit-scrollbar-thumb:hover{
+    background-color: #4a6fa5;
+}
