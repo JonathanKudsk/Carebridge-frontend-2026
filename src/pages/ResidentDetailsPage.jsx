@@ -157,6 +157,12 @@ export default function ResidentDetailsPage() {
               Opret Journal Entry
             </Button>
             <Button
+              variant="outline-success"
+              onClick={() => navigate(`/residents/${id}/savings-goals`)}
+            >
+              Opsparingsmål
+            </Button>
+            <Button
               variant="outline-secondary"
               onClick={() => navigate(`/residents/edit/${id}`)}
             >

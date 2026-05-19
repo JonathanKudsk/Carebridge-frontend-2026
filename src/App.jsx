@@ -16,13 +16,13 @@ import ShowJournalDetails from "./components/Journal/ShowJournalDetails";
 import CreateResidentPage from "./pages/CreateResidentPage";
 import CreateUser from "./pages/(worker)/CreateUser";
 import LinkResidets from "./pages/(worker)/LinkResidents";
-import MedicationChartPage from "./pages/MedicationChartPage";
 import ShiftCreatePage from "./pages/ShiftCreatePage.jsx";
 import MedicationPage from "./pages/MedicationPage.jsx";
 import MessagePage from "./pages/(worker)/MessagePage.jsx";
 import Admin from "./pages/Admin.jsx";
 import CreateBudgetPage from "./pages/CreateBudgetPage";
-
+import MedicationChartPage from "./pages/MedicationChartPage";
+import SavingsGoalsPage from "./pages/SavingsGoalsPage";
 
 import {
   getToken,
@@ -30,10 +30,10 @@ import {
   logout,
   onAuthChanged,
 } from "./services/auth";
-import { useSessionTimeout } from "./hooks/useSessionTimeout";
-import SessionWarningModal from "./components/SessionWarningModal";
 import ResidentDetailsPage from "./pages/ResidentDetailsPage.jsx";
 import EditResidentPage from "./pages/EditResidentPage.jsx";
+import { useSessionTimeout } from "./hooks/useSessionTimeout";
+import SessionWarningModal from "./components/SessionWarningModal";
 
 // Helper
 function readAuth() {
@@ -246,6 +246,14 @@ export default function App() {
               element={
                 <PrivateRoute>
                   <ResidentDetailsPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/residents/:id/savings-goals"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN", "CAREWORKER"]}>
+                  <SavingsGoalsPage />
                 </PrivateRoute>
               }
             />
