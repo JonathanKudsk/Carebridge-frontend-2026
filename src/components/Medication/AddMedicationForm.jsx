@@ -38,7 +38,7 @@ export default function AddMedicationForm({ chartId, onSaved, onCancel }) {
             setFormData(EMPTY_FORM);
             setStatus("idle");
             if (onSaved) onSaved();
-        } catch (err) {
+        } catch {
             setErrorMessage("An error occurred while saving. Please try again.");
             setStatus("idle");
         }
