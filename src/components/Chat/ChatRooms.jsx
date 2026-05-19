@@ -3,7 +3,7 @@ import styles from "./ChatRooms.module.css";
 
 function ChatRooms({ chatRooms, onSelectRoom, activeChatRoomId }) {
     return (
-        <Container className="mt-3" fluid className={styles.sidebar} >
+        <Container className={`mt-3 ${styles.sidebar}`} fluid>
             <div className={styles.header}>
                 <h5 className={styles.title}>Chatrum</h5>
             </div>
