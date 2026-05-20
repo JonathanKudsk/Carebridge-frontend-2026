@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Form, Button, Row, Col, Card } from "react-bootstrap";
+import { Alert, Form, Button, Row, Col, Card } from "react-bootstrap";
 import api from "../../services/api";
 import { createJournalEntry } from "../../api/api";
 
@@ -22,6 +22,7 @@ export default function JournalForm({
   })();
 
   const resolvedJournalId = journalId || routeJournalId || initialData?.journalId || "";
+  const isJournalIdLocked = Boolean(journalId || routeJournalId || initialData?.journalId);
 
   const [formData, setFormData] = useState(
     initialData || {
@@ -37,6 +38,13 @@ export default function JournalForm({
   const [templateFields, setTemplateFields] = useState([]);
   const [answers, setAnswers] = useState({});
   const [availableTemplates, setAvailableTemplates] = useState([]);
+  const [submitError, setSubmitError] = useState("");
+
+  useEffect(() => {
+    if (resolvedJournalId) {
+      setFormData((prev) => ({ ...prev, journalId: resolvedJournalId }));
+    }
+  }, [resolvedJournalId]);
 
   function normalizeTemplateList(payload) {
     if (Array.isArray(payload)) {
@@ -185,13 +193,14 @@ export default function JournalForm({
 
   async function handleSubmit(e) {
     e.preventDefault();
+    setSubmitError("");
 
     const selectedJournalId = Number(
       formData.journalId || journalId || routeJournalId || initialData?.journalId
     );
 
     if (!Number.isInteger(selectedJournalId) || selectedJournalId <= 0) {
-      console.error("Missing journalId for journal entry submit");
+      setSubmitError("Journal ID mangler. Journal entry kan ikke gemmes.");
       return;
     }
 
@@ -219,7 +228,11 @@ export default function JournalForm({
       }
     } catch (error) {
       console.error("Error creating journal entry:", error);
-      alert("Failed to create journal entry. Please try again.");
+      setSubmitError(
+        error?.response?.data?.msg ??
+          error?.response?.data?.message ??
+          "Journal entry kunne ikke gemmes. Prøv igen.",
+      );
     }
   }
 
@@ -242,6 +255,7 @@ export default function JournalForm({
                   onChange={handleChange}
                   placeholder="Indtast journalens ID"
                   min="1"
+                  readOnly={isJournalIdLocked}
                   required
                 />
               </Form.Group>
@@ -320,6 +334,8 @@ export default function JournalForm({
           </Form.Group>
 
           {fieldTypeToInputField(templateFields)}
+
+          {submitError && <Alert variant="danger">{submitError}</Alert>}
 
           <Button type="submit">Gem</Button>
         </Form>

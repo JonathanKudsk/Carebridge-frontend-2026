@@ -16,10 +16,20 @@ import ShowJournalDetails from "./components/Journal/ShowJournalDetails";
 import CreateResidentPage from "./pages/CreateResidentPage";
 import CreateUser from "./pages/(worker)/CreateUser";
 import LinkResidets from "./pages/(worker)/LinkResidents";
+import EmployeeOverviewPage from "./pages/admin/EmployeeOverviewPage";
+import EmployeeJournalPage from "./pages/admin/EmployeeJournalPage";
 import ShiftCreatePage from "./pages/ShiftCreatePage.jsx";
+import ShiftEditPage from "./pages/ShiftEditPage.jsx";
+import SchedulePage from "./pages/SchedulePage.jsx";
 import MedicationPage from "./pages/MedicationPage.jsx";
 import MessagePage from "./pages/(worker)/MessagePage.jsx";
 import Admin from "./pages/Admin.jsx";
+import Substitute from "./pages/Substitute.jsx";
+import CreateBudgetPage from "./pages/CreateBudgetPage";
+import MedicationChartPage from "./pages/MedicationChartPage";
+import SavingsGoalsPage from "./pages/SavingsGoalsPage";
+import ChatDock from "./components/Chat/ChatPopup/ChatDock.jsx";
+import HandbookPage from "./pages/HandbookPage.jsx";
 
 import {
   getToken,
@@ -29,6 +39,8 @@ import {
 } from "./services/auth";
 import ResidentDetailsPage from "./pages/ResidentDetailsPage.jsx";
 import EditResidentPage from "./pages/EditResidentPage.jsx";
+import { useSessionTimeout } from "./hooks/useSessionTimeout";
+import SessionWarningModal from "./components/SessionWarningModal";
 
 // Helper
 function readAuth() {
@@ -50,7 +62,7 @@ function PrivateRoute({ children, allowedRoles }) {
   if (allowedRoles && user?.role && !allowedRoles.includes(user.role)) {
     // Hvis rollen IKKE er i listen over tilladte roller
     console.warn(
-      `Adgang nægtet: Bruger med rolle '${user.role}' forsøgte at tilgå en beskyttet rute.`
+      `Adgang nægtet: Bruger med rolle '${user.role}' forsøgte at tilgå en beskyttet rute.`,
     );
     // Omdiriger til dashboardet eller en 'Adgang Nægtet'-side
     return <Navigate to="/" replace />;
@@ -63,12 +75,15 @@ function PrivateRoute({ children, allowedRoles }) {
 export default function App() {
   const navigate = useNavigate();
   const [{ token, user }, setAuth] = useState(readAuth());
+  const [showWarning, setShowWarning] = useState(false);
   const isAdmin = user?.role === "ADMIN";
   const isCareworker = user?.role === "CAREWORKER";
-  //const isCareworker = user?.role === "CAREWORKER";
-  //const isGuardian = user?.role === "GUARDIAN";
+  const isPlanner = user?.role === "PLANNER";
+  const canReadJournals = ["ADMIN", "CAREWORKER", "GUARDIAN", "SUBSTITUTE"].includes(
+    user?.role,
+  );
 
-  const [journals, setJournals] = useState([]);
+  const [, setJournals] = useState([]);
 
   // Listen for login/logout
   useEffect(() => {
@@ -81,10 +96,16 @@ export default function App() {
     };
   }, []);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    setShowWarning(false);
+    await logout();
     navigate("/login", { replace: true });
   };
+
+  useSessionTimeout({
+    onWarn: () => setShowWarning(true),
+    onExpire: () => handleLogout(),
+  });
 
   return (
     <>
@@ -104,14 +125,24 @@ export default function App() {
                 Calendar
               </Nav.Link>
 
+              <Nav.Link as={Link} to="/handbook">
+                Håndbog
+              </Nav.Link>
+
+              <Nav.Link as={Link} to="/schedule">
+                Vagtplan
+              </Nav.Link>
+
               <Nav.Link as={Link} to="/resident-overview">
                 Resident Overview
               </Nav.Link>
 
-              {/* TODO: Skal diskuteres med gruppen om det skal være en ting */}
-              {/* <Nav.Link as={Link} to="/journal-overview">
-                Journal Oversigt
-              </Nav.Link> */}
+
+              {canReadJournals && (
+                <Nav.Link as={Link} to="/journal-overview">
+                  Journal Oversigt
+                </Nav.Link>
+              )}
 
               {isAdmin && (
                 <>
@@ -126,10 +157,20 @@ export default function App() {
                   <Nav.Link as={Link} to="/admin/create-user">
                     Opret Bruger
                   </Nav.Link>
+
+                  <Nav.Link as={Link} to="/admin/employees">
+                    Medarbejderoversigt
+                  </Nav.Link>
                   <Nav.Link as={Link} to="/admin">
                     Admin
                   </Nav.Link>
                 </>
+              )}
+
+              {(isAdmin || isPlanner) && (
+                <Nav.Link as={Link} to="/substitute">
+                  Vikarer
+                </Nav.Link>
               )}
 
               {(isAdmin || isCareworker) && (
@@ -164,7 +205,13 @@ export default function App() {
         </Container>
       </Navbar>
 
-      {/* Routes */}
+      <SessionWarningModal
+        show={showWarning}
+        onRefreshed={() => setShowWarning(false)}
+        onExpired={() => handleLogout()}
+      />
+
+            {/* Routes */}
       <SnackProvider>
         <Container className="mt-4">
           <Routes>
@@ -172,10 +219,19 @@ export default function App() {
               path="/"
               element={
                 token ? (
-                  <Home /> // Hvis logget ind (token er sandt), vis Home-komponenten
+                  <Home />
                 ) : (
                   <Navigate to="/login" replace />
-                ) // Hvis ikke logget ind, omdiriger til /login
+                )
+              }
+            />
+
+            <Route
+              path="/handbook"
+              element={
+                <PrivateRoute>
+                  <HandbookPage />
+                </PrivateRoute>
               }
             />
 
@@ -204,12 +260,20 @@ export default function App() {
                 </PrivateRoute>
               }
             />
+
+            <Route
+              path="/substitute"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN", "PLANNER"]}>
+                  <Substitute />
+                </PrivateRoute>
+              }
+            />
+
             <Route
               path="/create-resident"
               element={
                 <PrivateRoute allowedRoles={["ADMIN"]}>
-                  {" "}
-                  {/* <-- Tjekker for Admin */}
                   <CreateResidentPage />
                 </PrivateRoute>
               }
@@ -232,6 +296,14 @@ export default function App() {
               }
             />
             <Route
+              path="/residents/:id/savings-goals"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN", "CAREWORKER"]}>
+                  <SavingsGoalsPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
               path="/message-page"
               element={
                 <PrivateRoute allowedRoles={["ADMIN", "CAREWORKER"]}>
@@ -248,34 +320,94 @@ export default function App() {
               }
             />
 
-            {/* Journal Pages */}
             <Route
               path="/residents/:id/create-journal"
               element={
-                <PrivateRoute>
+                <PrivateRoute allowedRoles={["ADMIN", "CAREWORKER", "SUBSTITUTE"]}>
                   <CreateJournalPage addJournal={setJournals} />
                 </PrivateRoute>
               }
             />
-            {/* TODO: Skal diskuteres med gruppen om det skal være en ting */}
-            {/* <Route
-              path="/journal-overview"
-              element={<JournalOverviewPage journals={journals} />}
-            /> */}
             <Route
-              path="/journal/:journalId"
-              element={<ShowJournalDetails journals={journals} />}
+              path="/journal-overview"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN", "CAREWORKER", "GUARDIAN", "SUBSTITUTE"]}>
+                  <JournalOverviewPage />
+                </PrivateRoute>
+              }
             />
+            <Route
+              path="/journals/:journalId/entries/:entryId"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN", "CAREWORKER", "GUARDIAN", "SUBSTITUTE"]}>
+                  <ShowJournalDetails />
+                </PrivateRoute>
+              }
+            />
+              <Route
+                  path="/medication-chart/:residentId"
+                  element={
+                      <PrivateRoute>
+                          <MedicationChartPage />
+                      </PrivateRoute>
+                  }
+              />
+
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/admin/create-user" element={<CreateUser />} />
-            <Route path="/login" element={token ? <Navigate to="/" replace /> : <Login />} />
+            <Route
+              path="/admin/employees"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN"]}>
+                  <EmployeeOverviewPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/employees/:userId/journal"
+              element={
+                <PrivateRoute allowedRoles={["ADMIN"]}>
+                  <EmployeeJournalPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/login"
+              element={token ? <Navigate to="/" replace /> : <Login />}
+            />
 
             <Route
               path="/shifts/create"
               element={
-                <PrivateRoute allowedRoles={["PLANNER"]}>
+                <PrivateRoute allowedRoles={["PLANNER", "ADMIN"]}>
                   <ShiftCreatePage />
+                </PrivateRoute>
+              }
+            />
+              <Route
+                  path="/residents/:id/create-budget"
+                  element={
+                      <PrivateRoute>
+                          <CreateBudgetPage />
+                      </PrivateRoute>
+                  }
+              />
+
+            <Route
+              path="/shifts/edit/:shiftId"
+              element={
+                <PrivateRoute allowedRoles={["PLANNER", "ADMIN"]}>
+                  <ShiftEditPage />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/schedule"
+              element={
+                <PrivateRoute>
+                  <SchedulePage />
                 </PrivateRoute>
               }
             />
@@ -283,6 +415,8 @@ export default function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Container>
+
+        {token && <ChatDock visible={Boolean(token)} />}
       </SnackProvider>
     </>
   );

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "react-bootstrap";
 import NewChatModal from "../../components/NewChatModal";
 import ChatRooms from "../../components/Chat/ChatRooms";
@@ -9,19 +10,30 @@ import { getCurrentUser } from "../../services/auth";
 import { getUsers } from "../../api/api";
 
 export default function MessagePage() {
+  const PAGE_SIZE = 5;
   const [showModal, setShowModal] = useState(false);
   const [chatRooms, setChatRooms] = useState([]);
   const [activeChatRoom, setActiveChatRoom] = useState(null);
   const [users, setUsers] = useState([]);
   const [myId, setMyId] = useState(null);
+  const [page, setPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
   const currentUser = getCurrentUser();
   const usersRef = useRef([]);
   const myIdRef = useRef(null);
+  const pageRef = useRef(0);
 
+  const [searchParams] = useSearchParams();
+  const selectedChatRoomId = searchParams.get("chatRoomId");
+
+  // Main data loading effect
   useEffect(() => {
     async function load() {
       try {
-        const rooms = await listChatRooms();
+        const response = await listChatRooms({ page: 0, size: PAGE_SIZE });
+        const rooms = response.chatRooms ?? response;
+        const total = response.totalCount ?? rooms.length;
         const allUsers = await getUsers().catch(() => []);
         setUsers(allUsers);
         usersRef.current = allUsers;
@@ -29,6 +41,7 @@ export default function MessagePage() {
         const resolvedId = me?.id ?? currentUser?.id;
         setMyId(resolvedId);
         myIdRef.current = resolvedId;
+        setTotalCount(total);
         const myRooms = rooms.filter((room) =>
           room.members?.some((m) => m.userId === resolvedId)
         );
@@ -43,7 +56,11 @@ export default function MessagePage() {
 
     const interval = setInterval(async () => {
       try {
-        const rooms = await listChatRooms();
+        const loadedSize = (pageRef.current + 1) * PAGE_SIZE;
+        const response = await listChatRooms({ page: 0, size: loadedSize });
+        const rooms = response.chatRooms ?? response;
+        const total = response.totalCount ?? rooms.length;
+        setTotalCount(total);
         const myRooms = rooms.filter((room) =>
           room.members?.some((m) => m.userId === myIdRef.current)
         );
@@ -54,15 +71,36 @@ export default function MessagePage() {
             return existing?.message ? { ...room, message: existing.message } : room;
           })
         );
-      } catch (err) {
-        console.error("Could not load chat rooms", err);
+      } catch {
         // polling errors are non-critical
       }
     }, 5000);
 
     return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Effect to select room from URL parameter
+  useEffect(() => {
+    if (!selectedChatRoomId || chatRooms.length === 0) return;
+
+    const selectedRoom = chatRooms.find(
+      (room) => String(room.id) === String(selectedChatRoomId)
+    );
+
+    if (selectedRoom) {
+      setActiveChatRoom(selectedRoom);
+    }
+  }, [selectedChatRoomId, chatRooms]);
+
+  // Effect to keep active room in sync with updated room data
+  useEffect(() => {
+    if (!activeChatRoom) return;
+
+    const updatedRoom = chatRooms.find((room) => room.id === activeChatRoom.id);
+    if (updatedRoom && updatedRoom !== activeChatRoom) {
+      setActiveChatRoom(updatedRoom);
+    }
+  }, [chatRooms]);
 
   async function attachLastMessages(rooms) {
     return Promise.all(
@@ -86,6 +124,27 @@ export default function MessagePage() {
     });
   }
 
+  async function loadMore() {
+    setLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const response = await listChatRooms({ page: nextPage, size: PAGE_SIZE });
+      const rooms = response.chatRooms ?? response;
+      const myRooms = rooms.filter((room) =>
+        room.members?.some((m) => m.userId === myId)
+      );
+      const enriched = enrichRooms(myRooms, users, myId);
+      const withMessages = await attachLastMessages(enriched);
+      setChatRooms((prev) => [...prev, ...withMessages]);
+      setPage(nextPage);
+      pageRef.current = nextPage;
+    } catch (err) {
+      console.error("Could not load more chat rooms", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  }
+
   function handleStartChat(chatRoom) {
     const enriched = enrichRooms([chatRoom], users, myId)[0];
     setChatRooms((prev) =>
@@ -96,17 +155,25 @@ export default function MessagePage() {
 
   return (
     <div className="d-flex" style={{ height: "calc(100vh - 80px)" }}>
-
       {/* Left */}
       <div className="border-end overflow-auto" style={{ width: 300 }}>
         <div className="p-3">
-          <Button className="w-100" onClick={() => setShowModal(true)}>Ny Chat</Button>
+          <Button className="w-100" onClick={() => setShowModal(true)}>
+            Ny Chat
+          </Button>
         </div>
         <ChatRooms
           chatRooms={chatRooms}
           onSelectRoom={setActiveChatRoom}
           activeChatRoomId={activeChatRoom?.id}
         />
+        {chatRooms.length < totalCount && (
+          <div className="p-3">
+            <Button variant="outline-secondary" className="w-100" onClick={loadMore} disabled={loadingMore}>
+              {loadingMore ? "Henter..." : "Vis flere"}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Right */}
@@ -115,14 +182,14 @@ export default function MessagePage() {
           <>
             <div className="p-3 border-bottom fw-bold">{activeChatRoom.name}</div>
             <ChatWindow
-            chatRoom={activeChatRoom}
-            users={users}
-            onLastMessage={(roomId, text) =>
-              setChatRooms((prev) =>
-                prev.map((r) => (r.id === roomId ? { ...r, message: text } : r))
-              )
-            }
-          />
+              chatRoom={activeChatRoom}
+              users={users}
+              onLastMessage={(roomId, text) =>
+                setChatRooms((prev) =>
+                  prev.map((r) => (r.id === roomId ? { ...r, message: text } : r))
+                )
+              }
+            />
           </>
         ) : (
           <div className="d-flex align-items-center justify-content-center h-100 text-muted">

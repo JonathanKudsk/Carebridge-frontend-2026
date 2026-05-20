@@ -1,102 +1,227 @@
 import api from "./api";
 
 const AUTH_CHANGED_EVENT = "auth-changed";
+
 export function notifyAuthChanged() {
-  window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
+    window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
 }
+
 export function onAuthChanged(callback) {
-  window.addEventListener(AUTH_CHANGED_EVENT, callback);
-  return () => window.removeEventListener(AUTH_CHANGED_EVENT, callback);
+    window.addEventListener(AUTH_CHANGED_EVENT, callback);
+
+    return () =>
+        window.removeEventListener(AUTH_CHANGED_EVENT, callback);
 }
 
 export function getToken() {
-  return localStorage.getItem("token");
+    return localStorage.getItem("token");
 }
+
 export function getCurrentUser() {
-  try {
-    return JSON.parse(localStorage.getItem("user") || "null");
-  } catch {
-    return null;
-  }
+    try {
+        return JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
+        return null;
+    }
 }
 
-// Step 1 — credentials only. Never writes to localStorage.
-// Returns { requiresTotpSetup, tempToken } or { requires2FA, tempToken }
-export async function login({ email, password }) {
-  const { data } = await api.post("/auth/login", { email, password });
-  if (data.token) {
-    storeFullSession(data);
-  }
-  return data;
+export function getSessionTimes() {
+    return {
+        warningAt: Number(localStorage.getItem("warningAt")) || null,
+        expiresAt: Number(localStorage.getItem("expiresAt")) || null,
+    };
 }
 
-export async function register({ name, email, password }) {
-  const { data } = await api.post("/auth/register", { name, email, password });
-  const token = data.token;
-  try {
-    localStorage.setItem("token", token);
+function saveSession(data, emailFallback) {
+    localStorage.setItem("token", data.token);
+
     localStorage.setItem(
-      "user",
-      JSON.stringify({
-        id: data.id,
-        email: data.email,
-        role: data.role,
-        name: data.name || email.split("@")[0],
-      }),
+        "user",
+        JSON.stringify({
+            id: data.id,
+            email: data.email,
+            role: data.role,
+            name:
+                data.name ||
+                (emailFallback ?? data.email).split("@")[0],
+            isEmployed: data.isEmployed ?? true,
+        })
     );
-  } catch (e) {
-    console.error("FAILED TO WRITE LOCALSTORAGE (register)", e);
-  }
-  notifyAuthChanged();
-  return data;
-}
 
-export function logout() {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-  notifyAuthChanged();
-}
+    if (data.expiresAt) {
+        localStorage.setItem(
+            "expiresAt",
+            String(data.expiresAt)
+        );
+    }
 
-// Step 2a — first-time setup: fetch QR code URI using the SETUP tempToken
-export async function setupTotp(tempToken) {
-  const { data } = await api.get("/auth/2fa/setup", {
-    headers: { Authorization: `Bearer ${tempToken}` },
-  });
-  return data; // { secret, otpauthUri }
+    if (data.warningAt) {
+        localStorage.setItem(
+            "warningAt",
+            String(data.warningAt)
+        );
+    }
+
+    notifyAuthChanged();
 }
 
 function storeFullSession(data) {
-  localStorage.setItem("token", data.token);
-  localStorage.setItem(
-    "user",
-    JSON.stringify({
-      id: data.id,
-      email: data.email,
-      role: data.role,
-      name: data.name,
-    }),
-  );
-  notifyAuthChanged();
+    localStorage.setItem("token", data.token);
+
+    localStorage.setItem(
+        "user",
+        JSON.stringify({
+            id: data.id,
+            email: data.email,
+            role: data.role,
+            name: data.name,
+            isEmployed: data.isEmployed ?? true,
+        })
+    );
+
+    if (data.expiresAt) {
+        localStorage.setItem(
+            "expiresAt",
+            String(data.expiresAt)
+        );
+    }
+
+    if (data.warningAt) {
+        localStorage.setItem(
+            "warningAt",
+            String(data.warningAt)
+        );
+    }
+
+    notifyAuthChanged();
 }
 
-// Step 2b — first-time setup: confirm 6-digit code, receive full 14-day JWT
-export async function confirmTotp(tempToken, code) {
-  const { data } = await api.post(
-    "/auth/2fa/confirm",
-    { code },
-    { headers: { Authorization: `Bearer ${tempToken}` } },
-  );
-  storeFullSession(data);
-  return data;
+// LOGIN
+// Step 1 — credentials only
+export async function login({ email, password }) {
+    const { data } = await api.post(
+        "/auth/login",
+        {
+            email,
+            password,
+        }
+    );
+
+    // Hvis backend allerede returnerer token
+    if (data.token) {
+        storeFullSession(data);
+    }
+
+    return data;
 }
 
-// Step 2c — returning user: verify 6-digit code, receive full 14-day JWT
-export async function verifyTotp(tempToken, code) {
-  const { data } = await api.post(
-    "/auth/2fa/verify",
-    { code },
-    { headers: { Authorization: `Bearer ${tempToken}` } },
-  );
-  storeFullSession(data);
-  return data;
+// REGISTER
+export async function register({
+                                   name,
+                                   email,
+                                   password,
+                               }) {
+    const { data } = await api.post(
+        "/auth/register",
+        {
+            name,
+            email,
+            password,
+        }
+    );
+
+    saveSession(data, email);
+
+    return data;
+}
+
+// REFRESH TOKEN
+export async function refresh() {
+    const { data } = await api.post(
+        "/auth/refresh"
+    );
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem(
+        "expiresAt",
+        String(data.expiresAt)
+    );
+    localStorage.setItem(
+        "warningAt",
+        String(data.warningAt)
+    );
+
+    notifyAuthChanged();
+
+    return data;
+}
+
+// LOGOUT
+export async function logout() {
+    try {
+        await api.post("/auth/logout");
+    } catch {
+        // ignore
+    }
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("expiresAt");
+    localStorage.removeItem("warningAt");
+
+    notifyAuthChanged();
+}
+
+// STEP 2A — Setup TOTP
+export async function setupTotp(tempToken) {
+    const { data } = await api.get(
+        "/auth/2fa/setup",
+        {
+            headers: {
+                Authorization: `Bearer ${tempToken}`,
+            },
+        }
+    );
+
+    return data;
+}
+
+// STEP 2B — Confirm setup
+export async function confirmTotp(
+    tempToken,
+    code
+) {
+    const { data } = await api.post(
+        "/auth/2fa/confirm",
+        { code },
+        {
+            headers: {
+                Authorization: `Bearer ${tempToken}`,
+            },
+        }
+    );
+
+    storeFullSession(data);
+
+    return data;
+}
+
+// STEP 2C — Verify login
+export async function verifyTotp(
+    tempToken,
+    code
+) {
+    const { data } = await api.post(
+        "/auth/2fa/verify",
+        { code },
+        {
+            headers: {
+                Authorization: `Bearer ${tempToken}`,
+            },
+        }
+    );
+
+    storeFullSession(data);
+
+    return data;
 }

@@ -3,6 +3,8 @@ import { Form, Button, Spinner } from "react-bootstrap";
 import { getMessages, sendMessage } from "../../services/messages";
 import { getCurrentUser } from "../../services/auth";
 import { getUsers } from "../../api/api";
+import styles from "./ChatWindow.module.css";
+
 
 export default function ChatWindow({ chatRoom, users = [], onLastMessage }) {
     const [messages, setMessages] = useState([]);
@@ -10,6 +12,7 @@ export default function ChatWindow({ chatRoom, users = [], onLastMessage }) {
     const [loading, setLoading] = useState(false);
     const [sending, setSending] = useState(false);
     const currentUser = getCurrentUser();
+    const isEmployed = currentUser?.isEmployed ?? true;
     const [currentUserId, setCurrentUserId] = useState(currentUser?.id ?? null);
     const bottomRef = useRef(null);
     const [messageError, setMessageError] = useState("");
@@ -56,6 +59,7 @@ export default function ChatWindow({ chatRoom, users = [], onLastMessage }) {
         if (messages.length > 0) {
             onLastMessage?.(chatRoom.id, messages[messages.length - 1].message);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [messages]);
 
     const validateMessage = (message) => {
@@ -95,31 +99,32 @@ export default function ChatWindow({ chatRoom, users = [], onLastMessage }) {
         }
     }
 
+    const isInactive = chatRoom?.active === false;
+    const isDisabled = sending || !isEmployed || isInactive;
+
     return (
-        <div className="d-flex flex-column" style={{ flex: 1, overflow: "hidden" }}>
-            <div className="flex-grow-1 overflow-auto p-3">
+        <div className={styles.container}>
+            <div className={styles.messages}>
                 {loading && <Spinner animation="border" size="sm" />}
                 {messages.map((msg) => {
                     const isOwn = msg.userId === currentUserId;
                     return (
                         <div
                             key={msg.id}
-                            className={`d-flex mb-2 ${isOwn ? "justify-content-end" : "justify-content-start"}`}
+                            className={`${styles.messageWrapper} ${isOwn ? styles.messageWrapperOwn : styles.messageWrapperOther}`}
                         >
                             <div
-                                className={`p-2 rounded ${isOwn ? "bg-primary text-white" : "bg-light border text-dark"}`}
-                                style={{ maxWidth: "70%" }}
+                               className={`${styles.bubble} ${isOwn ? styles.bubbleOwn : styles.bubbleOther} ${isInactive ? styles.bubbleInactive : ""}`}
                             >
                                 {!isOwn && (
-                                    <div className="fw-bold small">
+                                    <div className={styles.senderName}>
                                         {msg.userName || users.find((u) => u.id === msg.userId)?.name || "Ukendt"}
                                     </div>
                                 )}
                                 <div>{msg.message}</div>
                                 {msg.timestamp && (
                                     <div
-                                        className="text-end opacity-75"
-                                        style={{ fontSize: "0.7rem" }}
+                                        className={styles.timestamp}
                                     >
                                         {new Date(msg.timestamp).toLocaleTimeString("da-DK", {
                                             hour: "2-digit",
@@ -134,15 +139,16 @@ export default function ChatWindow({ chatRoom, users = [], onLastMessage }) {
                 <div ref={bottomRef} />
             </div>
 
-            <Form onSubmit={handleSend} className="p-3 border-top d-flex gap-2">
+            <Form onSubmit={handleSend} className={styles.inputBar}>
                 <Form.Control
+                    className={styles.input}
                     value={text}
                     onChange={(e) => {
                         setText(e.target.value);
                         setMessageError("");
                     }}
-                    placeholder="Skriv en besked..."
-                    disabled={sending}
+                    placeholder={!isEmployed || chatRoom?.active === false ? "Du kan ikke sende beskeder længere" : "Skriv en besked..."}
+                    disabled={sending || !isEmployed || chatRoom?.active === false}
                     isInvalid={!!messageError}
                 />
                 {messageError && (
@@ -150,8 +156,11 @@ export default function ChatWindow({ chatRoom, users = [], onLastMessage }) {
                         {messageError}
                     </Form.Control.Feedback>
                 )}
-                <Button type="submit" 
-                        disabled={sending || !text.trim() || !!messageError}>
+                <Button 
+                    className={`${styles.sendButton} ${isDisabled ? styles.sendButtonDisabled : ""}`}
+                    type="submit" 
+                    disabled={isDisabled}
+                >
                     {sending ? <Spinner animation="border" size="sm" /> : "Send"}
                 </Button>
             </Form>
